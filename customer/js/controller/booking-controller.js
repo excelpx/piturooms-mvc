@@ -757,6 +757,11 @@ async function submitBooking() {
     result.snapToken ||
     result.snap_token;
 
+    window.lastSnapToken =
+    snapToken;
+    window.lastBookingData =
+    bookingData;
+
 
     if(!snapToken){
 
@@ -783,10 +788,10 @@ bookingData.paymentMethod =
 "Cashless";
 
 bookingData.paymentStatus =
-"Pending Payment";
+"Belum Dibayar";
 
 bookingData.status =
-"Pending Payment";
+"Menunggu Pembayaran";
 
 bookingData.amountPaid =
 0;
@@ -817,7 +822,7 @@ if(
       {
 
 
-        onSuccess:
+onSuccess:
 async function(result){
 
  console.log(
@@ -864,91 +869,92 @@ async function(result){
 
  });
 
-pendingBookingData =
-null;
+  pendingBookingData =
+  null;
 
 
-updateSuccessStatus(
- "Pembayaran berhasil & Booking tersimpan",
- "ok"
-);
+  updateSuccessStatus(
+  "Pembayaran berhasil & Booking tersimpan",
+  "ok"
+  );
+
+  await sendInvoiceEmail(
+  bookingData
+  );
 
 
-// ==========================
-// KIRIM INVOICE EMAIL RESEND
-// ==========================
+  downloadInvoice(
+  bookingData
+  );
 
-await sendInvoiceEmail(
- bookingData
-);
-
-
-
-// ==========================
-// AKTIFKAN TOMBOL INVOICE
-// ==========================
-
-const invoiceBtn =
-document.getElementById(
- "download-invoice-btn"
-);
+  const invoiceBtn =
+  document.getElementById(
+  "download-invoice-btn"
+  );
 
 
-if(invoiceBtn){
+  if(invoiceBtn){
 
 
- invoiceBtn.disabled =
- false;
+  invoiceBtn.disabled =
+  false;
 
 
- invoiceBtn.classList.remove(
-  "opacity-50",
-  "cursor-not-allowed"
- );
+  invoiceBtn.classList.remove(
+    "opacity-50",
+    "cursor-not-allowed"
+  );
 
 
-}
+  }
 
 
-},
-onPending:
-function(result){
-
-
- console.log(
-  "MIDTRANS PENDING:",
-  result
- );
-
-
- updateSuccessStatus(
-  "Menunggu pembayaran Midtrans",
-  "warn"
- );
-
-
-},
-
-
-        onClose:function(){
+  },
+  onPending:
+  function(result){
 
 
   console.log(
-    "CUSTOMER CLOSE MIDTRANS"
+    "MIDTRANS PENDING:",
+    result
   );
 
 
   updateSuccessStatus(
-    "Booking tersimpan. Menunggu pembayaran.",
+    "Menunggu pembayaran Midtrans",
     "warn"
   );
 
 
-}
+  },
+    onClose:function(){
 
+    console.log(
+    "CUSTOMER CLOSE MIDTRANS"
+    );
 
-}
-);
+    updateSuccessStatus(
+    "Pembayaran belum selesai. Silakan pilih tindakan.",
+    "warn"
+    );
+
+    document
+    .getElementById(
+    "payment-action"
+    )
+    .innerHTML = `
+
+    <button onclick="retryMidtransPayment()">
+    Bayar Sekarang
+    </button>
+
+    <button onclick="changePaymentToCash()">
+    Bayar Saat Check-in (Cash)
+    </button>
+    `;
+    }
+   }
+ );
 
 
 
@@ -982,57 +988,58 @@ return;
     true;
 
 
-updateSuccessStatus(
- "Pembayaran berhasil & Booking tersimpan",
- "ok"
-);
-
-
-// KIRIM EMAIL INVOICE
-await sendInvoiceEmail(
- bookingData
-);
-
-
-const invoiceBtn =
-document.getElementById(
- "download-invoice-btn"
-
-);
-
-  }else{
-
-
-    bookingData.firebaseSaved =
-    false;
-
-
     updateSuccessStatus(
-      "Eror. Cek Rules / koneksi.",
-      "warn"
+    "Pembayaran berhasil & Booking tersimpan",
+    "ok"
     );
 
-
-    console.warn(
-      firebaseResult.error
+    await sendInvoiceEmail(
+    bookingData
     );
 
+    downloadInvoice(
+    bookingData
+    );
 
-  }
+    const invoiceBtn =
+    document.getElementById(
+    "download-invoice-btn"
+
+    );
+
+      }else{
+
+
+        bookingData.firebaseSaved =
+        false;
+
+
+        updateSuccessStatus(
+          "Eror. Cek Rules / koneksi.",
+          "warn"
+        );
+
+
+        console.warn(
+          firebaseResult.error
+        );
+
+
+      }
 
 
 
-  setButtonLoading(
-    button,
-    false,
-    "Konfirmasi & Pesan"
-  );
+      setButtonLoading(
+        button,
+        false,
+        "Konfirmasi & Pesan"
+      );
 
 
-  pendingBookingData =
-  null;
+      pendingBookingData =
+      null;
 
-}
+    }
 
 
 async function saveBookingToFirebase(data) {
@@ -1168,19 +1175,95 @@ async function findBookingInFirebase(code) {
   }
 }
 
-function resetFormAfterBooking(){
- const form =
- $("booking-form");
- if(form)
- form.reset();
- const section =
- $("booking-section");
- if(section){
- section.classList.add(
- "hidden"
- );
-}
- renderRoomOptions();
- updateSummary();
-}
+    function resetFormAfterBooking(){
+    const form =
+    $("booking-form");
+    if(form)
+    form.reset();
+    const section =
+    $("booking-section");
+    if(section){
+    section.classList.add(
+    "hidden"
+    );
+    }
+    renderRoomOptions();
+    updateSummary();
+    }
 
+    window.retryMidtransPayment =
+    function(){
+
+    if(
+    !window.lastSnapToken
+    ){
+
+    alert(
+      "Data pembayaran tidak ditemukan"
+    );
+
+    return;
+
+    }
+    console.log(
+    "ULANG BAYAR MIDTRANS"
+    );
+
+    window.snap.pay(
+    window.lastSnapToken
+    );
+
+  };
+
+    window.changePaymentToCash =
+    async function(){
+    const booking =
+    window.lastBookingData;
+    if(!booking){
+    alert(
+    "Data booking tidak ditemukan"
+    );
+    return;
+    }
+
+    await firebaseDb
+    .ref(
+    "bookings/" +
+    booking.id
+    )
+    .update({
+
+    paymentMethod:
+    "Cash",
+    paymentStatus:
+    "Bayar di Tempat",
+    status:
+    "Confirmed",
+    updatedAt:
+    new Date()
+    .toISOString()
+    });
+
+    booking.paymentMethod =
+    "Cash";
+    booking.paymentStatus =
+    "Bayar di Tempat";
+    booking.status =
+    "Confirmed";
+
+    // KIRIM EMAIL INVOICE
+    await sendInvoiceEmail(
+    booking
+    );
+
+
+    // DOWNLOAD OTOMATIS
+    downloadInvoice(
+    booking
+    );
+
+    updateSuccessStatus(
+    "Metode pembayaran diganti Cash",
+    "ok"
+    );
+  };
