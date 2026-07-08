@@ -1,4 +1,13 @@
 {
   "cleanUrls": true,
-  "trailingSlash": true
+  "rewrites": [
+    {
+      "source": "/customer",
+      "destination": "/customer/index.html"
+    },
+    {
+      "source": "/Staff",
+      "destination": "/Staff/index.html"
+    }
+  ]
 }
