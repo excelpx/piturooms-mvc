@@ -3406,34 +3406,60 @@ window.handleMidtransPayment = async function(
   isMidtransOpen = true;
   try {
     const midtransOrderId =
-`${newRes.id}-${Date.now()}`;
+    `STAFF-${Date.now()}`;
 
-const response = await fetch(
-  'https://piturooms-api.vercel.app/api/get-token',
-{
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
+    const cleanAmount =
+    Number(
+    String(newRes.totalCharge)
+    .replace(/[^0-9]/g,"")
+    );
+
+    console.log(
+    "KIRIM MIDTRANS STAFF",
+    {
+      order:midtransOrderId,
+      totalAsli:newRes.totalCharge,
+      totalFix:cleanAmount,
+      tipe:typeof cleanAmount
+    }
+    );
+
+    if(
+    !cleanAmount ||
+    isNaN(cleanAmount)
+    ){
+    alert(
+      "Total pembayaran tidak valid"
+    );
+    isMidtransOpen=false;
+    return;
+    }
+
+    const response =
+    await fetch(
+    'https://piturooms-api.vercel.app/api/get-token',
+    {
+    method:'POST',
+    headers:{
+    'Content-Type':'application/json'
     },
 
-    body: JSON.stringify({
-      order_id: midtransOrderId,
-      gross_amount:
-      newRes.totalCharge,
-      customer_details: {
-        first_name:
-        newRes.guestName,
-        phone:
-        newRes.phone,
-        email:
-        newRes.email ||
-        'guest@piturooms.com'
-
-      }
-
-    })
-  }
-);
+    body:JSON.stringify({
+    order_id:
+    midtransOrderId,
+    gross_amount:
+    cleanAmount,
+    customer_details:{
+    first_name:
+    newRes.guestName || "Guest",
+    phone:
+    newRes.phone || "08123456789",
+    email:
+    newRes.email || 
+    "guest@piturooms.com"
+    }
+  })
+});
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data?.error || 'Gagal berkomunikasi dengan Server Jembatan Vercel.');
     const snapToken = data.snap_token;
@@ -3442,6 +3468,17 @@ const response = await fetch(
     alert('Midtrans Snap belum dimuat. Cek koneksi atau Client Key.');
     return;
     }
+
+    console.log(
+    "MIDTRANS TOKEN:",
+    snapToken
+    );
+
+    console.log(
+    "TOTAL:",
+    newRes.totalCharge
+    );
+
 
     window.snap.pay(snapToken, {
       onSuccess: async function(result) {
