@@ -1,4 +1,23 @@
 {
-  "cleanUrls": true,
-  "trailingSlash": true
+  "version": 2,
+  "builds": [
+    {
+      "src": "**/*",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/customer",
+      "dest": "/customer/index.html"
+    },
+    {
+      "src": "/staff",
+      "dest": "/Staff/index.html"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ]
 }
