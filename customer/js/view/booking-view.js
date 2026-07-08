@@ -427,7 +427,7 @@ function generateInvoiceHTML(data) {
   <div class="invoice">
     <div class="head">
       <h1>Invoice Pemesanan Kamar</h1>
-      <p>Lumina Stay - Piturooms Hotels</p>
+      <p>Piturooms Hotels</p>
     </div>
     <div class="body">
       <div class="code">Kode Booking: ${escapeHtml(code)}</div>
