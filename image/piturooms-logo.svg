@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160" role="img" aria-labelledby="title desc">
+  <title id="title">Piturooms Logo</title>
+  <desc id="desc">Simple hotel logo for receipt header.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#1f2a44" />
+      <stop offset="100%" stop-color="#374a7a" />
+    </linearGradient>
+  </defs>
+  <rect x="10" y="10" width="140" height="140" rx="28" fill="url(#bg)" />
+  <path d="M48 118V42h37c18 0 31 10 31 27 0 18-13 28-32 28H67v21H48zm19-37h16c9 0 14-4 14-12 0-7-5-11-14-11H67v23z" fill="#ffffff" />
+  <path d="M102 113l16-16" stroke="#9fb3ff" stroke-width="8" stroke-linecap="round" />
+</svg>

@@ -1,0 +1,183 @@
+﻿<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PituRooms - Booking</title>
+<link rel="stylesheet" href="css/style.css">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="../shared/firebase-config.js"></script>
+</head>
+<body>
+<header class="site-header">
+	<div class="nav-wrap">
+		<div class="brand">
+			<div class="brand-logo">
+				<img src="/image/Logo Piturooms.png" alt="Logo Piturooms" class="w-5 h-5" />
+			</div>
+			<div>
+				<h1>Piturooms</h1>
+				<p>PITUROOMS HOTELS</p>
+			</div>
+		</div>
+		<a class="nav-cta" href="../customer/booking.html">Reservasi Sekarang</a>
+	</div>
+</header>
+<section class="booking-page">
+<div class="booking-container">
+<form id="booking-form" class="booking-card">
+	<h5 class="section-label">FORM RESERVASI</h5>
+	<h1>Data Pemesanan</h1>
+	<div class="booking-grid">
+		<div class="form-group">
+			<label>Nama Lengkap *</label>
+			<input id="booking-name" class="booking-input" placeholder="Contoh: Excel Peter">
+		</div>
+		<div class="form-group">
+			<label>Email *</label>
+			<input id="booking-email" class="booking-input" placeholder="email@example.com">
+		</div>
+		<div class="form-group">
+			<label>No. HP *</label>
+			<input id="booking-phone" class="booking-input" placeholder="08xxxxxxxx">
+		</div>
+		<div class="form-group">
+			<label>No. Identitas *</label>
+			<input id="booking-identity" class="booking-input" placeholder="KTP / Passport">
+		</div>
+		<div class="form-group form-full">
+			<label>Nama Tamu</label>
+			<input id="booking-guest-name" class="booking-input" placeholder="Kosongkan jika sama dengan pemesan">
+		</div>
+		<div class="form-group">
+			<label>Tipe Kamar *</label>
+			<select id="booking-room-type" class="booking-input"></select>
+		</div>
+		<div class="form-group">
+			<label>Jumlah Kamar *</label>
+			<input type="number" min="1" value="1" id="booking-quantity" class="booking-input">
+		</div>
+		<div class="form-group">
+			<label>Check-In *</label>
+			<input type="date" id="booking-checkin" class="booking-input">
+		</div>
+		<div class="form-group">
+			<label>Check-Out *</label>
+			<input type="date" id="booking-checkout" class="booking-input">
+		</div>
+	</div>
+	<h3>Metode Pembayaran</h3>
+	<div class="payment-options">
+		<label><input type="radio" name="payment-method" value="cashless" checked> Cashless</label>
+		<label><input type="radio" name="payment-method" value="cash"> Cash</label>
+	</div>
+	<div class="form-group">
+		<label>Fasilitas Kamar Terpilih</label>
+		<div id="room-facilities" class="booking-input" style="min-height:72px; display:flex; gap:8px; flex-wrap:wrap; align-items:flex-start; padding:12px; background:#fff; border-radius:12px; border:1.5px solid var(--line);">
+			<span class="text-sm text-slate-500">Pilih tipe kamar untuk melihat fasilitas lengkap.</span>
+		</div>
+	</div>
+	<button class="btn btn-primary full" type="submit">Lanjut ke Konfirmasi</button>
+</form>
+<aside class="summary-card">
+	<h2>Ringkasan</h2>
+	<div id="booking-summary">
+		<div class="summary-row"><span>Kamar</span><strong id="sum-room">-</strong></div>
+		<div class="summary-row"><span>Harga/Malam</span><strong id="sum-price">Rp 0</strong></div>
+		<div class="summary-row"><span>Durasi</span><strong id="sum-duration">0 malam</strong></div>
+		<div class="summary-row"><span>Jumlah</span><strong id="sum-quantity">1 kamar</strong></div>
+		<div class="summary-row"><span>Subtotal</span><strong id="sum-subtotal">Rp 0</strong></div>
+		<div class="summary-row"><span>Pajak 10%</span><strong id="sum-tax">Rp 0</strong></div>
+		<div class="summary-total">
+			<div>Total</div>
+			<strong id="sum-total">Rp 0</strong>
+		</div>
+		<p class="summary-note">Cashless otomatis berstatus lunas. Cash akan dibayar saat check-in.</p>
+	</div>
+</aside>
+</div>
+</section>
+<div id="confirm-modal" class="modal hidden" aria-hidden="true">
+  <div class="modal-box">
+    <div class="modal-head">
+      <span class="eyebrow white">
+        Konfirmasi
+      </span>
+      <h2>
+        Konfirmasi Pemesanan
+      </h2>
+      <p>
+        Periksa ulang data sebelum booking dibuat.
+      </p>
+    </div>
+    <div 
+      id="confirm-detail"
+      class="modal-body">
+    </div>
+    <div class="modal-actions">
+      <button
+        id="cancel-confirm-btn"
+        type="button"
+        class="btn btn-outline">
+        Batal
+      </button>
+      <button
+        id="submit-confirm-btn"
+        type="button"
+        class="btn btn-primary">
+        Konfirmasi & Pesan
+      </button>
+    </div>
+  </div>
+</div>
+<div id="success-modal" class="modal hidden" aria-hidden="true">
+  <div class="modal-box success-box">
+    <div class="success-icon">
+      ✓
+    </div>
+    <h2>
+      Pemesanan Berhasil
+    </h2>
+    <p>
+      Kode booking sudah dibuat.
+      Invoice bisa diunduh sekarang.
+    </p>
+    <div 
+      class="success-code"
+      id="success-code">
+      PITU-XXXXXX
+    </div>
+    <div
+      id="success-status"
+      class="success-status">
+      Berhasil Booking
+    </div>
+    <div class="modal-actions vertical">
+    <button
+        id="download-invoice-btn"
+        type="button"
+        class="btn btn-primary full">
+        Unduh Invoice
+    </button>
+    <button
+        id="close-success-btn"
+        type="button"
+        class="btn btn-outline full">
+        Tutup
+      </button>
+    </div>
+  </div>
+</div>
+<script src="js/model/booking-model.js"></script>
+</section>
+<script src="js/model/booking-model.js"></script>
+<script src="js/view/booking-view.js"></script>
+<script src="js/controller/booking-controller.js"></script>
+<script type="text/javascript"src="https://app.sandbox.midtrans.com/snap/snap.js"data-client-key="Mid-client-AdpLxpX7ZknoCOO-">
+</script>
+</body>
+</html>

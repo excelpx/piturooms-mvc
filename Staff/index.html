@@ -1,0 +1,1649 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Piturooms - Hotel Operating System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../shared/tailwind.config.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<script src="../shared/firebase-config.js"></script>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body class="bg-[#F9FAFB] text-slate-800 font-sans min-h-screen antialiased selection:bg-indigo-500 selection:text-white">
+
+    <!-- === 1. LOGIN CONTAINER === -->
+    <div id="login-container" class="min-h-screen bg-slate-950 flex items-center justify-center p-4">
+      <div class="bg-slate-900 border border-slate-800 w-full max-w-lg rounded-3xl p-8 shadow-2xl relative space-y-6">
+        <div class="text-center">
+          <div class="inline-flex items-center gap-2 px-3 py-1 bg-indigo-500/10 border border-indigo-500/20 rounded-full text-[10px] text-indigo-400 font-black uppercase tracking-widest mb-3">
+            <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> PITUROOMS HOTELS
+          </div>
+          <h1 class="text-3xl font-black text-white tracking-tight leading-none">Piturooms</h1>
+          <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mt-1.5">Hotel Operating System (HOS) Login</p>
+        </div>
+
+        <form id="login-form" class="space-y-4">
+          <div id="login-error" class="hidden p-3.5 bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs font-semibold rounded-2xl animate-shake">
+            Kredensial salah. Silakan coba akun admin atau resepsionis yang benar.
+          </div>
+
+          <div>
+            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Username</label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-500">
+                <i data-lucide="users" class="w-4 h-4"></i>
+              </span>
+              <input id="login-username" type="text" required class="w-full bg-slate-950/60 border border-slate-800 focus:border-indigo-500 hover:border-slate-700 pl-11 pr-4 py-3 rounded-2xl text-sm font-bold text-white placeholder-slate-600 focus:outline-none transition-all" placeholder="Contoh: receptionist / admin" />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Sandi Keamanan</label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-500">
+                <i data-lucide="key" class="w-4 h-4"></i>
+              </span>
+              <input id="login-password" type="password" required class="w-full bg-slate-950/60 border border-slate-800 focus:border-indigo-500 hover:border-slate-700 pl-11 pr-4 py-3 rounded-2xl text-sm font-bold text-white placeholder-slate-600 focus:outline-none transition-all" placeholder="••••••••" />
+            </div>
+          </div>
+
+          <button type="submit" class="w-full bg-indigo-650 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold py-3.5 rounded-2xl transition-all shadow-lg active:scale-[0.98] select-none cursor-pointer">
+            Masuk ke Loket HOS &rarr;
+          </button>
+        </form>
+
+      </div>
+    </div>
+
+    <!-- === 2. MAIN APP CONTAINER === -->
+    <div id="app-container" class="hidden min-h-screen">
+      
+      <!-- SIDEBAR -->
+      <aside id="main-sidebar" class="dashboard-sidebar w-68 bg-slate-900 text-white flex flex-col justify-between select-none shrink-0 border-r border-slate-850 z-20">
+        <div>
+          <!-- Brand title -->
+          <div class="sidebar-top h-20 flex items-center justify-between px-4 border-b border-slate-800/50">
+            <div class="sidebar-brand flex items-center gap-3.5 min-w-0">
+              <div class="sidebar-logo w-12 h-12 bg-indigo-650 bg-indigo-600 rounded-xl flex items-center justify-center font-black text-sm tracking-tighter text-white shadow-md">
+              <img src="/image/Logo Piturooms.png" alt="Logo Piturooms" class="w-8 h-9" />
+              </div>
+              <div class="sidebar-brand-text min-w-0">
+                <h2 class="font-black text-white text-base leading-none tracking-tight truncate">Piturooms</h2>
+                <span class="text-[9px] uppercase tracking-widest font-black text-slate-400 mt-1 block truncate">PITUROOMS HOTELS</span>
+              </div>
+            </div>
+
+            <button
+              id="sidebar-toggle-btn"
+              type="button"
+              class="sidebar-toggle-btn w-9 h-9 rounded-xl border border-slate-700/70 bg-slate-800/80 hover:bg-slate-700 text-slate-200 flex items-center justify-center transition-all"
+              aria-label="Kecilkan sidebar"
+              aria-expanded="true"
+              title="Toggle Sidebar"
+            >
+              <i data-lucide="panel-left-close" class="w-4 h-4"></i>
+            </button>
+          </div>
+
+          <!-- Navigation Links -->
+          <nav class="p-4 space-y-1">
+            <div id="receptionist-nav-group">
+              <!-- Receptionist Area Title -->
+              <div class="sidebar-section-title px-3 py-2 text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 mt-2">
+                Menu Resepsionis
+              </div>
+              <button id="menu-btn-dashboard" class="w-full text-left sidebar-btn px-4 py-3 text-xs font-bold text-slate-450 hover:bg-slate-800/50 hover:text-white rounded-xl flex items-center gap-3 transition-all">
+                <i data-lucide="layout-dashboard" class="w-4 h-4 text-slate-400 group-hover:text-white"></i>
+                <span>Dashboard</span>
+              </button>
+            <button id="menu-btn-checkIn" class="w-full text-left sidebar-btn px-4 py-3 text-xs font-bold text-slate-450 hover:bg-slate-800/50 hover:text-white rounded-xl flex items-center gap-3 transition-all">
+              <i data-lucide="log-in" class="w-4 h-4 text-slate-400"></i>
+              <span>Check-In</span>
+            </button>
+            <button id="menu-btn-checkOut" class="w-full text-left sidebar-btn px-4 py-3 text-xs font-bold text-slate-450 hover:bg-slate-800/50 hover:text-white rounded-xl flex items-center gap-3 transition-all">
+              <i data-lucide="log-out" class="w-4 h-4 text-slate-400"></i>
+              <span>Check-Out</span>
+            </button>
+            <button id="menu-btn-reservations" class="w-full text-left sidebar-btn px-4 py-3 text-xs font-bold text-slate-450 hover:bg-slate-800/50 hover:text-white rounded-xl flex items-center gap-3 transition-all">
+              <i data-lucide="calendar" class="w-4 h-4 text-slate-400"></i>
+              <span>Check Reservasi</span>
+            </button>
+            <button id="menu-btn-history" class="w-full text-left sidebar-btn px-4 py-3 text-xs font-bold text-slate-450 hover:bg-slate-800/50 hover:text-white rounded-xl flex items-center gap-3 transition-all">
+              <i data-lucide="file-text" class="w-4 h-4 text-slate-400"></i>
+              <span>Riwayat Transaksi</span>
+            </button>
+          </div>
+
+            <!-- Admin Area Title (Conditional visible in rendering) -->
+            <div id="admin-nav-group" class="hidden">
+              <div class="sidebar-section-title sidebar-category px-3 py-2 text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 mt-5 border-t border-slate-800/40 pt-4">
+                Dashboard
+              </div>
+              <div class="sidebar-section-title sidebar-category px-3 py-2 text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">
+                Administrasi Sistem
+              </div>
+              <button id="menu-btn-adminRooms" class="w-full text-left sidebar-btn px-4 py-3 text-xs font-bold text-slate-450 hover:bg-slate-800/50 hover:text-white rounded-xl flex items-center gap-3 transition-all">
+                <i data-lucide="bed-double" class="w-4 h-4 text-slate-400"></i>
+                <span>Kamar & Inventori</span>
+              </button>
+              <button id="menu-btn-adminUsers" class="w-full text-left sidebar-btn px-4 py-3 text-xs font-bold text-slate-450 hover:bg-slate-800/50 hover:text-white rounded-xl flex items-center gap-3 transition-all">
+                <i data-lucide="users" class="w-4 h-4 text-slate-400"></i>
+                <span>User Accounts</span>
+              </button>
+              <button id="menu-btn-adminGuests" class="w-full text-left sidebar-btn px-4 py-3 text-xs font-bold text-slate-450 hover:bg-slate-800/50 hover:text-white rounded-xl flex items-center gap-3 transition-all">
+                <i data-lucide="contact" class="w-4 h-4 text-slate-400"></i>
+                <span>Riwayat Transaksi & Keuangan</span>
+              </button>
+            </div>
+            
+          </nav>
+        </div>
+
+        <!-- Profile / Logout Area -->
+        <div class="p-4 border-t border-slate-800/60 space-y-3.5 bg-slate-950/25">
+          <div class="sidebar-user-wrap flex items-center gap-3.5">
+            <div class="w-9 h-9 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 flex items-center justify-center font-black text-sm relative">
+              <span id="user-initials">U</span>
+              <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-slate-900 rounded-full"></span>
+            </div>
+            <div class="sidebar-user-text leading-none flex-1 overflow-hidden">
+              <p id="user-name" class="text-xs font-black text-white truncate max-w-[130px]">Guest Name</p>
+              <span id="user-role" class="text-[9px] font-black text-indigo-400 tracking-wider uppercase mt-1 block">Role</span>
+            </div>
+          </div>
+          <button id="logout-btn" class="w-full bg-slate-800 hover:bg-rose-500/10 hover:text-rose-400 border border-slate-700/60 text-slate-350 text-[11px] font-bold py-2 rounded-xl flex items-center justify-center gap-1.5 transition-all select-none cursor-pointer">
+            <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+            <span class="logout-label">Keluar Loket</span>
+          </button>
+        </div>
+      </aside>
+
+      <!-- CONTENT FRAMEWORK -->
+      <div class="flex-1 flex flex-col min-w-0 max-h-screen overflow-y-auto">
+        <!-- HEADER -->
+        <header id="topbar-header" class="h-20 bg-white border-b border-slate-200 px-8 flex items-center justify-between font-sans sticky top-0 z-10 shrink-0">
+          <div id="topbar-search-slot" class="flex-1 max-w-lg">
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
+                <i data-lucide="search" class="w-4 h-4"></i>
+              </span>
+              <input id="header-search-input" type="text" placeholder="Cari tamu, nomor kamar, tipe, kode invoice..." class="w-full pl-11 pr-4 py-2.5 bg-slate-100 border-transparent text-xs font-semibold text-slate-700 placeholder-slate-400 rounded-full focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all" />
+            </div>
+          </div>
+
+          <div id="topbar-meta-group" class="flex items-center gap-6 select-none pl-6">
+            <div class="text-right hidden md:block leading-none">
+              <p id="header-date" class="text-xs font-black text-slate-800">Senin, 24 Mei 2026</p>
+              <span id="header-time" class="text-[9px] text-slate-400 font-extrabold uppercase mt-1 tracking-wider block">Pukul 08.00 WIB</span>
+            </div>
+            <div class="w-[1px] h-8 bg-slate-250 bg-slate-200 hidden md:block"></div>
+            <div class="flex items-center gap-2.5">
+              <div class="text-right hidden sm:block leading-none">
+                <p id="header-user-name" class="text-xs font-black text-slate-900">Zea Aldrian</p>
+                <span id="header-user-role" class="text-[9px] text-indigo-600 font-extrabold uppercase mt-1 block tracking-wider">RESEPTIONSIT</span>
+              </div>
+              <div id="header-avatar" class="relative flex items-center justify-center w-9 h-9 rounded-full bg-indigo-100 text-indigo-700 font-black text-xs shadow-sm cursor-pointer hover:opacity-90">
+                Z
+                <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full"></span>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <!-- VIEW WRAPPERS -->
+        <main class="flex-1 min-h-0 bg-[#F9FAFB]">
+          
+          <!-- view: dashboard -->
+          <div id="view-dashboard" class="view-content hidden p-8 animate-fadeIn">
+            <!-- Greetings -->
+            <div class="flex justify-between items-center mb-8">
+              <div>
+                <h1 class="text-2xl font-black text-slate-900 tracking-tight leading-none mb-1">Selamat Pagi, <span id="dash-greet-name">Resepsionis</span></h1>
+                <p class="text-xs font-semibold text-slate-450">Sistem Operasional standard loket Piturooms.</p>
+              </div>
+              <div class="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[9px] font-bold uppercase tracking-wider px-3.5 py-1.5 rounded-full flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>Hotel Connected</span>
+              </div>
+            </div>
+
+            <!-- Stats KPI Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div class="bg-white p-5 border border-slate-200 rounded-2xl shadow-sm flex flex-col justify-between">
+                <div>
+                  <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 leading-none">Kamar Terisi (Occupied)</p>
+                  <p class="text-2xl font-black text-slate-900"><span id="stat-occupied-kamar">0</span> <span class="text-xs font-bold text-slate-400">/ <span class="stat-total-kamar">0</span> Kamar</span></p>
+                </div>
+                <div class="mt-4 flex items-center text-[9px] text-indigo-600 font-bold uppercase tracking-widest">
+                  <i data-lucide="shield-check" class="w-3 h-3 mr-1"></i> RESERVASI AKTIF SEMENTARA
+                </div>
+              </div>
+              <div class="bg-white p-5 border border-slate-200 rounded-2xl shadow-sm flex flex-col justify-between">
+                <div>
+                  <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 leading-none">Booking OTA Belum Check-In</p>
+                  <p class="text-2xl font-black text-slate-900" id="stat-booking-code-pending">0</p>
+                </div>
+                <div class="mt-4 flex items-center text-[9px] text-amber-600 font-bold uppercase tracking-widest">
+                  <i data-lucide="clock" class="w-3 h-3 mr-1"></i> MENUNGGU KEDATANGAN TAMU
+                </div>
+              </div>
+              <div class="bg-white p-5 border border-slate-200 rounded-2xl shadow-sm flex flex-col justify-between">
+                <div>
+                  <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 leading-none">Kamar Tersedia (Available)</p>
+                  <p class="text-2xl font-black text-emerald-650 text-emerald-600"><span id="stat-available-kamar">0</span> <span class="text-xs font-bold text-slate-400">/ <span class="stat-total-kamar">0</span> Kamar</span></p>
+                </div>
+                <div class="mt-4 flex items-center text-[9px] text-emerald-600 font-bold uppercase tracking-widest">
+                  <i data-lucide="shield-check" class="w-3 h-3 mr-1"></i> SIAP UNTUK TAMU TERBARU
+                </div>
+              </div>
+            </div>
+
+            <!-- Rooms Grid View -->
+            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-6">
+              <div class="flex flex-col items-center justify-center gap-4 mb-2 text-center">
+                <div>
+                  <h3 class="font-extrabold text-slate-900 text-sm">Alokasi & Status Kamar</h3>
+                  <p class="text-[11px] font-semibold text-slate-500">Klik salah satu kamar di bawah untuk alokasi check-in atau check-out cepat.</p>
+                </div>
+
+                <div class="flex bg-slate-100 p-1 rounded-xl border border-slate-250 border-slate-200 text-xs font-semibold shrink-0">
+                  <button id="dash-rooms-all" class="px-3.5 py-1.5 font-bold rounded-lg transition-all text-slate-500 cursor-pointer">Semua</button>
+                  <button id="dash-rooms-booked" class="px-3 py-1.5 font-bold rounded-lg transition-all text-slate-500 cursor-pointer">Occupied</button>
+                </div>
+              </div>
+
+              <!-- Grid -->
+              <div id="dashboard-rooms-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-4">
+                <!-- Kamar blocks render recursively from JS -->
+              </div>
+            </div>
+          </div>
+
+          <!-- view: check-in -->
+          <div id="view-checkIn" class="view-content hidden p-8 animate-fadeIn">
+            <div class="mb-8">
+              <h1 class="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+                <i data-lucide="log-in" class="w-6 h-6 text-indigo-650 text-indigo-600"></i>
+                <span>Check-In Tamu</span>
+              </h1>
+              <p class="text-xs font-bold text-slate-400 mt-1 uppercase tracking-widest">Prosedur penyerahan kunci kamar hotel</p>
+            </div>
+
+            <!-- Mode selectors -->
+            <div class="flex border-b border-slate-200 mb-8 font-semibold text-xs select-none">
+              <button id="tab-checkin-walkin" class="px-5 py-3 border-b-2 border-indigo-600 text-indigo-600 font-extrabold cursor-pointer">
+                Check-in Langsung (Walk-In Offline)
+              </button>
+              <button id="tab-checkin-online" class="px-5 py-3 border-b-2 border-transparent text-slate-400 hover:text-slate-800 cursor-pointer">
+                Booking Online
+              </button>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+              
+              <!-- Left layout form panel -->
+              <div class="lg:col-span-8 bg-white p-6 border border-slate-200 rounded-2xl shadow-sm space-y-6">
+                
+                <!-- WALKIN PANEL -->
+                <div id="panel-checkin-walkin" class="space-y-4">
+                  <h3 class="font-bold text-slate-900 border-b border-slate-100 pb-3">Formulir Registrasi Tamu Baru</h3>
+                  
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-semibold">
+                    <div>
+                      <label class="block text-[10px] text-slate-400 uppercase font-black tracking-wider mb-1">Nama Lengkap Tamu *</label>
+                      <input id="walkin-name" type="text" class="w-full px-4 py-2 border.5 border border-slate-200 rounded-xl" placeholder="Budi Nugroho" />
+                    </div>
+                    <div>
+                      <label class="block text-[10px] text-slate-400 uppercase font-black tracking-wider mb-1">KTP / NID / Paspor *</label>
+                      <input id="walkin-identity" type="text" class="w-full px-4 py-2 border.5 border border-slate-200 rounded-xl" placeholder="KTP No.327xxxxxxxx" />
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-semibold">
+                    <div>
+                      <label class="block text-[10px] text-slate-400 uppercase font-black tracking-wider mb-1">No. Kontak *</label>
+                      <input id="walkin-phone" type="text" class="w-full px-4 py-2 border.5 border border-slate-200 rounded-xl" placeholder="08xxxxxxxxxx" />
+                    </div>
+                    <div>
+                      <label class="block text-[10px] text-slate-400 uppercase font-black tracking-wider mb-1">Email (Opsional)</label>
+                      <input id="walkin-email" type="email" class="w-full px-4 py-2 border.5 border border-slate-200 rounded-xl" placeholder="budi@example.com" />
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs font-semibold">
+                    <div>
+                      <label class="block text-[10px] text-slate-400 uppercase font-black tracking-wider mb-1">Tipe Kamar Pilihan</label>
+                      <select id="walkin-room-type" class="w-full px-3 py-2 border border-slate-200 rounded-xl">
+                        <option value="">Memuat kamar tersedia...</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[10px] text-slate-400 uppercase font-black tracking-wider mb-1">Check-in</label>
+                      <input id="walkin-checkin-date" type="date" class="w-full px-3 py-2 border border-slate-200 rounded-xl" />
+                    </div>
+                    <div>
+                      <label class="block text-[10px] text-slate-400 uppercase font-black tracking-wider mb-1">Check-out</label>
+                      <input id="walkin-checkout-date" type="date" class="w-full px-3 py-2 border border-slate-200 rounded-xl" />
+                    </div>
+                  </div>
+
+                  <div class="space-y-3 text-xs font-semibold">
+                    <div class="flex items-center justify-between gap-3">
+                      <div>
+                        <label class="block text-[10px] text-slate-400 uppercase font-black tracking-wider mb-1">Pilih Unit Kamar</label>
+                        <p class="text-[11px] text-slate-500">Pilih kamar kosong berdasarkan tipe dengan tombol unit.</p>
+                      </div>
+                      <span id="walkin-room-count" class="text-[10px] font-black uppercase tracking-wider text-indigo-600">0 kamar tersedia</span>
+                    </div>
+                    <div id="walkin-room-buttons" class="grid grid-cols-1 gap-3"></div>
+                  </div>
+
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-semibold pt-2">
+                    <div>
+                      <label class="block text-[10px] text-slate-400 uppercase font-black tracking-wider mb-1.5">Durasi Menginap (Malam)</label>
+                      <input id="walkin-duration" type="number" min="1" value="1" readonly class="w-full px-4 py-2 border border-slate-200 rounded-xl bg-slate-50 text-slate-700" />
+                    </div>
+                    <div>
+                      <label class="block text-[10px] text-slate-400 uppercase font-black tracking-wider mb-1.5">Alokasi Kamar Otomatis</label>
+                      <div class="w-full px-3 py-2 border border-slate-200 bg-slate-50 rounded-xl text-[11px] font-semibold text-slate-600">
+                        Sistem akan memilih kamar kosong dari inventaris admin sesuai tipe yang dipilih.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- ONLINE OTA PANEL -->
+                <div id="panel-checkin-online" class="hidden space-y-5">
+                  <h3 class="font-bold text-slate-900 border-b border-slate-100 pb-3">Pelunasan Kode Booking OTA</h3>
+                  
+                  <div class="flex gap-4 items-end text-xs font-semibold">
+                    <div class="flex-1">
+                      <label class="block text-[10px] text-slate-400 uppercase font-black tracking-wider mb-1">Masukkan Kode Booking (Contoh: PITU-9821, PITU-5219)</label>
+                      <input id="online-booking-code" type="text" class="w-full px-4 py-2.5 border border-slate-250 font-mono font-bold text-slate-900 rounded-xl" placeholder="PITU-XXXX" />
+                    </div>
+                    <button id="verify-booking-btn" class="px-5 py-2.5.5 bg-slate-905 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold cursor-pointer transition-all select-none py-2.5 self-end">
+                      Verifikasi & Cari Kode
+                    </button>
+                  </div>
+
+                  <!-- Verified panel card -->
+                  <div id="online-verified-card" class="hidden p-5 bg-blue-50/50 border border-blue-150 rounded-2xl space-y-4 text-xs">
+                    <div class="flex justify-between items-start">
+                      <div>
+                        <span class="text-[9px] font-black text-blue-500 uppercase tracking-widest block mb-0.5">Kode Validated</span>
+                        <h4 id="verified-guest-name" class="text-sm font-black text-slate-900">Johnathan Doe</h4>
+                        <p id="verified-guest-phone" class="text-slate-500 font-medium">0852xxxxxxxx</p>
+                      </div>
+                      <div class="text-right">
+                        <span id="verified-room-type" class="px-2.5 py-1 bg-blue-100 text-blue-800 font-black rounded-lg leading-none uppercase text-[9px] tracking-wide">JI-Careless Whisper Unit</span>
+                      </div>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-2 border-t border-b border-blue-100/50 py-3 text-slate-600 font-bold">
+                      <div>
+                        <p class="text-[9px] text-slate-400 uppercase font-black tracking-wider leading-none mb-1">Check In</p>
+                        <span id="verified-ci-date">2026-05-24</span>
+                      </div>
+                      <div>
+                        <p class="text-[9px] text-slate-400 uppercase font-black tracking-wider leading-none mb-1">Check Out</p>
+                        <span id="verified-co-date">2026-05-26</span>
+                      </div>
+                      <div>
+                        <p class="text-[9px] text-slate-400 uppercase font-black tracking-wider leading-none mb-1">Durasi</p>
+                        <span id="verified-duration">2</span> Malam
+                      </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-semibold pt-1">
+                        <div>
+                        <label class="block text-[10px] text-slate-500 uppercase font-black tracking-wider mb-1.5">Alokasi Kamar Otomatis</label>
+                        <div class="w-full px-3 py-2 border border-slate-200 bg-slate-50 rounded-xl text-[11px] font-semibold text-slate-600">
+                          Kamar akan dialokasikan otomatis dari inventaris admin saat proses check-in OTA dijalankan.
+                        </div>
+                      </div>
+                      <div>
+                        <label class="block text-[10px] text-slate-500 uppercase font-black tracking-wider mb-1.5">Pelunasan Metode (Pre-paid / On-spot)</label>
+                        <input type="text" readonly value="Lunas (OTA Paid)" id="online-payment-status" class="w-full px-4 py-2 bg-slate-50 border border-slate-200 text-slate-600 text-[11px] rounded-xl font-bold" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- Right total calculation panel side -->
+              <div class="lg:col-span-4 bg-white p-6 border border-slate-200 rounded-3xl shadow-sm space-y-6">
+                <h3 class="font-extrabold text-slate-900 border-b border-slate-100 pb-3">Subtotal & Pembayaran</h3>
+                
+                <div class="space-y-4 text-xs font-bold">
+                  <div class="flex justify-between border-b border-slate-100 pb-3 text-slate-500">
+                    <span>Estimasi Biaya Menginap:</span>
+                    <span id="payment-calc-subtotal" class="text-right text-slate-800">Rp 0</span>
+                  </div>
+
+                  <!-- Payment Options selection -->
+                  <div id="payment-options-block">
+                      <!-- Nominal pembayaran OTA cash -->
+                      <div id="ota-cash-payment-box" class="hidden">
+                      <label class="block text-[10px] text-slate-400 uppercase font-black tracking-wider mb-2">
+                      Nominal Pembayaran
+                      </label>
+                      <input
+                        id="ota-payment-amount"
+                        type="number"
+                        class="w-full border border-slate-200 rounded-xl px-4 py-3 font-bold"
+                        placeholder="Masukkan nominal bayar">
+                    </div>
+                    <label class="block text-[10px] text-slate-400 uppercase font-black tracking-wider mb-2">Metode Pelunasan</label>
+                    <div class="grid grid-cols-2 gap-2">
+                      <label class="border-2 border-indigo-650 rounded-xl p-2.5 flex flex-col items-center gap-1 cursor-pointer transition-all hover:bg-slate-50 group">
+                        <input type="radio" value="cash" name="payment-method" checked class="hidden" />
+                        <span class="text-[11px] font-black text-slate-800">CASH</span>
+                      </label>
+                      <label class="border border-slate-200 rounded-xl p-2.5 flex flex-col items-center gap-1 cursor-pointer transition-all hover:bg-slate-50 group">
+                        <input type="radio" value="midtrans" name="payment-method" class="hidden" />
+                        <span class="text-[11px] font-bold text-slate-550">CASHLESS</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <!-- Cash specific change container -->
+                  <div id="cash-change-container" class="space-y-3 pt-2">
+                    <div>
+                      <label class="block text-[10px] text-slate-400 uppercase font-black tracking-wider mb-1">Nominal Tunai Diserahkan (Rp)</label>
+                      <input id="payment-amount-paid" type="text" inputmode="numeric" class="w-full px-4 py-2 border border-slate-200 rounded-xl text-slate-800" placeholder="Rp 0" />
+                    </div>
+                    <div class="flex justify-between items-center bg-indigo-50 border border-indigo-100/50 p-3.5 rounded-2xl text-xs">
+                      <span class="text-indigo-800 font-extrabold">Uang Kembalian:</span>
+                      <span id="payment-calc-change" class="text-sm font-black text-indigo-900">Rp 0</span>
+                    </div>
+                  </div>
+
+                  <!-- Complete checkin buttons -->
+                  <div class="pt-4">
+                    <button id="complete-checkin-btn" class="w-full bg-[#1a73e8] hover:bg-indigo-700 text-white py-3.5 rounded-2xl font-black text-center shadow-lg transition-all active:scale-98 select-none tracking-tight leading-none cursor-pointer">
+                      Proses & Aktifkan Kunci Kamar &rarr;
+                    </button>
+                    <p class="text-[10px] text-slate-400 text-center mt-2.5">Data struk check-in otomatis disimpan di Riwayat Ledger.</p>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+          </div>
+
+          <!-- view: check-out -->
+          <div id="view-checkOut" class="view-content hidden p-8 animate-fadeIn">
+            <div class="mb-8">
+              <h1 class="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+                <i data-lucide="log-out" class="w-6 h-6 text-indigo-650 text-indigo-600"></i>
+                <span>Check-Out Kamar</span>
+              </h1>
+              <p class="text-xs font-bold text-slate-400 mt-1 uppercase tracking-widest">Pelepasan kunci & tagihan akhir tamu</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+              
+              <!-- Left search and details panel -->
+              <div class="lg:col-span-8 bg-white p-6 border border-slate-200 rounded-2xl shadow-sm space-y-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-3">
+                  <h3 class="font-bold text-slate-900">Pilih Kamar Terisi (Occupied)</h3>
+                  
+                  <div class="flex items-center gap-2 max-w-sm w-full sm:w-auto">
+                    <span class="text-[10px] uppercase font-bold text-slate-400 shrink-0">Pilih No. Kamar:</span>
+                    <select id="checkout-room-select" class="px-3 py-1.5 border border-slate-200 rounded-xl bg-white text-xs font-bold focus:outline-none">
+                      <!-- recursive values from JS state -->
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Active occupant details block representation -->
+                <div id="checkout-empty-state" class="text-center py-16 text-slate-400 animate-fadeIn font-semibold self-center">
+                  <i data-lucide="help-circle" class="w-10 h-10 mx-auto text-slate-300 mb-2"></i>
+                  <p class="text-sm">Silakan pilih salah satu kamar aktif yang terisi dari menu pilih kamar di atas untuk memproses check-out tagihan.</p>
+                </div>
+
+                <div id="checkout-details-card" class="hidden space-y-6 animate-fadeIn">
+                  <div class="flex justify-between items-start">
+                    <div>
+                      <span class="text-[9px] font-black text-indigo-600 uppercase tracking-widest">Detail Registrasi In-House</span>
+                      <h4 id="checkout-guest-name" class="text-base font-black text-slate-900 mt-0.5"></h4>
+                      <p id="checkout-guest-identity">KTP / NID / Paspor: </p>
+                    </div>
+                    <div class="text-right">
+                      <span id="checkout-room-badge" class="px-3 py-1 bg-indigo-50 border border-indigo-150 text-indigo-700 font-black rounded-lg leading-none uppercase text-[10px] tracking-wide block">Kamar 201</span>
+                      <span id="checkout-room-type" class="text-[10px] text-slate-400 block mt-1 uppercase font-bold">RO-Slow White</span>
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 bg-slate-50 border border-slate-200/50 p-4 rounded-2xl text-xs font-bold text-slate-600">
+                    <div>
+                      <p class="text-[8px] text-slate-400 uppercase font-black tracking-wider leading-none mb-1">Check-In</p>
+                      <span id="checkout-ci-date"></span>
+                    </div>
+                    <div>
+                      <p class="text-[8px] text-slate-400 uppercase font-black tracking-wider leading-none mb-1">Check-Out (Jadwal)</p>
+                      <span id="checkout-co-date"></span>
+                    </div>
+                    <div>
+                      <p class="text-[8px] text-slate-400 uppercase font-black tracking-wider leading-none mb-1">Lama Tinggal</p>
+                      <span id="checkout-duration"></span> Malam
+                    </div>
+                    <div>
+                      <p class="text-[8px] text-slate-400 uppercase font-black tracking-wider leading-none mb-1">Lunas Sewa Kamar</p>
+                      <span id="checkout-is-online">-</span>
+                    </div>
+                  </div>
+
+                  <!-- Surcharge forms layout panel representation -->
+                  <div class="space-y-4">
+                    <h3 class="font-extrabold text-slate-900 border-b border-indigo-50/50 pb-2 text-[13px]">Biaya Tambahan / Denda Tambahan (Surcharge / Penalty)</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-semibold">
+                      <div>
+                        <label class="block text-[10px] text-slate-400 uppercase font-black tracking-wide mb-1">Keterlambatan (Late Checkout) (Rp)</label>
+                        <label class="w-full px-2.5 py-2 border border-slate-200 rounded-xl bg-white flex items-center gap-1.5 cursor-pointer leading-none">
+                          <input id="checkout-surcharge-late" type="checkbox" class="w-3.5 h-3.5 shrink-0 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" />
+                          <span id="checkout-surcharge-late-label" class="text-[11px] font-bold text-slate-700">Terapkan denda (Rp 0)</span>
+                        </label>
+                      </div>
+                      <div>
+                        <label class="block text-[10px] text-slate-400 uppercase font-black tracking-wide mb-1">Minibar / Restoran (Hotel Food) (Rp)</label>
+                        <input id="checkout-surcharge-minibar" type="number" value="0" class="w-full px-4 py-2 border border-slate-205 rounded-xl border-slate-200" placeholder="0" />
+                      </div>
+                      <div>
+                        <label class="block text-[10px] text-slate-400 uppercase font-black tracking-wide mb-1">Kerusakan / Hilang Properti (Rp)</label>
+                        <label class="w-full px-2.5 py-2 border border-slate-200 rounded-xl bg-white flex items-center gap-1.5 cursor-pointer leading-none">
+                          <input id="checkout-surcharge-damage" type="checkbox" class="w-3.5 h-3.5 shrink-0 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" />
+                          <span id="checkout-surcharge-damage-label" class="text-[11px] font-bold text-slate-700">Terapkan denda (Rp 0)</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label class="block text-[10px] text-slate-400 uppercase font-black tracking-wide mb-1">Catatan Tambahan Checkout (Opsional)</label>
+                      <textarea id="checkout-remarks" rows="2" class="w-full px-4 py-2 border border-slate-200 text-slate-800 text-xs font-semibold rounded-xl" placeholder="cth: Minum Coca-cola 1, air mineral 2 botol dilunasi lunas"></textarea>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- Right total sum computation panel block -->
+              <div class="lg:col-span-4 bg-white p-6 border border-slate-200 rounded-3xl shadow-sm space-y-6">
+                <h3 class="font-extrabold text-slate-900 border-b border-slate-100 pb-3">Perhitungan Invoice Akhir</h3>
+                
+                <div class="space-y-4 text-xs font-bold">
+                  <div class="space-y-2 border-b border-slate-100 pb-3 text-slate-500">
+                    <div class="flex justify-between">
+                      <span>Subtotal Denda & Tambahan:</span>
+                      <span id="checkout-calc-surcharges-sum" class="text-right text-slate-800">Rp 0</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span>Harga Kamar (Lunas):</span>
+                      <span class="text-right text-[#10b981]">Lunas</span>
+                    </div>
+                  </div>
+
+                  <div class="flex justify-between items-center text-sm py-1.5 text-slate-900">
+                    <span class="font-black">TOTAL INVOICE ADD-ON:</span>
+                    <span id="checkout-calc-grandtotal" class="font-black text-slate-900 text-base">Rp 0</span>
+                  </div>
+
+                  <!-- Checkout Payments options block -->
+                  <div id="checkout-payment-box">
+                    <label class="block text-[10px] text-slate-400 uppercase font-black tracking-wider mb-2">Metode Pembayaran Surcharge / Denda</label>
+                    <div class="grid grid-cols-2 gap-2">
+                      <label class="border-2 border-indigo-650 rounded-xl p-2.5 flex flex-col items-center gap-1 cursor-pointer transition-all hover:bg-slate-50 select-none">
+                        <input type="radio" value="Cash" name="checkout-payment-method" checked class="hidden" />
+                        <span class="text-[10px] font-black text-slate-800 uppercase">Cash Tunai</span>
+                      </label>
+                      <label class="border border-slate-250 border-slate-200 rounded-xl p-2.5 flex flex-col items-center gap-1 cursor-pointer transition-all hover:bg-slate-50 select-none">
+                        <input type="radio" value="midtrans" name="checkout-payment-method" class="hidden" />
+                        <span class="text-[10px] font-bold text-slate-500 uppercase">Cashleass</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div class="pt-4">
+                    <button id="complete-checkout-btn" class="w-full bg-[#10b981] hover:bg-emerald-600 text-white py-3.5 rounded-2xl font-black text-center shadow-lg transition-all active:scale-98 select-none tracking-tight leading-none cursor-pointer">
+                      Selesaikan Checkout & Buka Kunci Kamar &rarr;
+                    </button>
+                    <p class="text-[10px] text-slate-400 text-center mt-2.5">Kamar otomatis diset status "Tersedia" setelah konfirmasi checkout.</p>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+          </div>
+
+          <!-- view: reservations -->
+          <div id="view-reservations" class="view-content hidden p-8 animate-fadeIn">
+            <!-- Header title row -->
+            <div class="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                <h1 class="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+                  <i data-lucide="calendar" class="w-6 h-6 text-indigo-650 text-indigo-600"></i>
+                  <span>Check Reservasi</span>
+                </h1>
+                <p class="text-xs font-bold text-slate-400 mt-1 uppercase tracking-widest">Registrasi Rincian Booking Tamu</p>
+              </div>
+
+              <div class="flex items-center gap-3">
+                <button id="create-reservation-btn-trigger" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black rounded-xl shadow-sm flex items-center gap-1.5 cursor-pointer leading-tight select-none">
+                  <i data-lucide="plus" class="w-4 h-4"></i>
+                  <span>Buat Booking Baru</span>
+                </button>
+                <button id="btn-reset-checkout" type="button" class="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-black rounded-xl shadow-sm flex items-center gap-1.5 cursor-pointer leading-tight select-none">
+                  <i data-lucide="trash-2" class="w-4 h-4"></i>
+                  <span>Reset Data Check-Out</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Tabs categories tables -->
+            <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-6">
+              
+              <div class="flex border-b border-slate-100 pb-4 select-none flex-wrap gap-2 text-xs font-black">
+                <button id="res-tab-all" class="px-4 py-2 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-100 cursor-pointer">Semua (0)</button>
+                <button id="res-tab-confirmed" class="px-4 py-2 rounded-lg text-slate-500 hover:bg-slate-50 cursor-pointer">Confirmed (Awaiting C-I) (0)</button>
+                <button id="res-tab-checkedin" class="px-4 py-2 rounded-lg text-slate-500 hover:bg-slate-50 cursor-pointer">Checked In (0)</button>
+                <button id="res-tab-checkedout" class="px-4 py-2 rounded-lg text-slate-500 hover:bg-slate-50 cursor-pointer">Checked Out (0)</button>
+              </div>
+
+              <!-- Main Table Renders Dynamically -->
+              <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                  <thead>
+                    <tr class="border-b border-slate-150 text-[10px] font-black uppercase text-slate-400 tracking-wider">
+                      <th class="py-3 px-4">No Booking</th>
+                      <th class="py-3 px-4">Nama Tamu</th>
+                      <th class="py-3 px-4">No. Kontak</th>
+                      <th class="py-3 px-4">Tipe Kamar</th>
+                      <th class="py-3 px-4">Nomor Kamar</th>
+                      <th class="py-3 px-4">Periode In/Out</th>
+                      <th class="py-3 px-4 text-right">Biaya Total</th>
+                      <th class="py-3 px-4 text-center">Status</th>
+                      <th class="py-3 px-4 text-center">Tindakan</th>
+                    </tr>
+                  </thead>
+                  <tbody id="reservations-table-body" class="text-xs font-semibold text-slate-700 divide-y divide-slate-100">
+                    <!-- Dynamic rendering rows -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- view: history -->
+          <div id="view-history" class="view-content hidden p-8 animate-fadeIn">
+            <div class="mb-8">
+              <h1 class="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+                <i data-lucide="file-text" class="w-6 h-6 text-indigo-650 text-indigo-600"></i>
+                <span>Riwayat Transaksi</span>
+              </h1>
+              <p class="text-xs font-bold text-slate-400 mt-1 uppercase tracking-widest">Jurnal Pendapatan kasir hotel</p>
+            </div>
+
+            <!-- Stats metric charts rows -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div class="bg-white p-5 border border-slate-200 rounded-2xl shadow-sm flex flex-col justify-between">
+                <div>
+                  <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 leading-none">Total Omset Pendapatan</p>
+                  <p class="text-2xl font-black text-slate-900" id="hist-total-revenue">Rp 0</p>
+                </div>
+                <div class="mt-4 flex items-center text-[9px] text-indigo-600 font-bold uppercase tracking-widest">AKUMULASI SELURUH OPERASIONAL</div>
+              </div>
+              <div class="bg-white p-5 border border-slate-200 rounded-2xl shadow-sm flex flex-col justify-between">
+                <div>
+                  <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 leading-none">Aktivitas Check-In</p>
+                  <p class="text-2xl font-black text-slate-900" id="hist-checkin-count">0 trx</p>
+                </div>
+                <div class="mt-4 flex items-center text-[9px] text-emerald-600 font-bold uppercase tracking-widest">TAMU REGISTERED MASUK</div>
+              </div>
+              <div class="bg-white p-5 border border-slate-200 rounded-2xl shadow-sm flex flex-col justify-between">
+                <div>
+                  <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 leading-none">Aktivitas Check-Out</p>
+                  <p class="text-2xl font-black text-slate-900" id="hist-checkout-count">0 trx</p>
+                </div>
+                <div class="mt-4 flex items-center text-[9px] text-amber-600 font-bold uppercase tracking-widest">RE-CHECK KUNCI KEMBALI</div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+              <!-- Left side Table selection lists -->
+              <div class="lg:col-span-8 bg-white p-6 border border-slate-200 rounded-2xl shadow-sm space-y-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-3">
+                  <h3 class="font-extrabold text-slate-900">Log ledger Journal Jurnal</h3>
+                  
+                  <div class="flex items-center gap-2">
+                    <span class="text-[10.5px] uppercase font-bold text-slate-400">Filter Metode:</span>
+                    <select id="history-method-select" class="px-3 py-1.5 border border-slate-200 rounded-xl bg-white text-xs font-bold focus:outline-none">
+                      <option value="All">Semua</option>
+                      <option value="Cash">Cash</option>
+                      <option value="QRIS">QRIS</option>
+                      <option value="Debit Card">Debit Card</option>
+                      <option value="Transfer Bank">Transfer Bank</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Log table grids -->
+                <div class="overflow-x-auto">
+                  <table class="w-full text-left">
+                    <thead>
+                      <tr class="border-b border-slate-150 text-[10px] font-black uppercase text-slate-405 text-slate-400 tracking-wider">
+                        <th class="py-2.5 px-3">Kode TRX</th>
+                        <th class="py-2.5 px-3">Waktu</th>
+                        <th class="py-2.5 px-3">Nama Tamu</th>
+                        <th class="py-2.5 px-3">Kamar</th>
+                        <th class="py-2.5 px-3">Aktivitas</th>
+                        <th class="py-2.5 px-3">User</th>
+                        <th class="py-2.5 px-3 text-right">Nominal</th>
+                        <th class="py-2.5 px-3 text-center">Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody id="history-table-body" class="text-xs font-semibold text-slate-700 divide-y divide-slate-100">
+                      <!-- dynamic rows -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Right receipt panel simulator printing mock -->
+              <div class="lg:col-span-4 bg-white p-6 border border-slate-200 rounded-3xl shadow-sm relative sticky top-24 space-y-4">
+                <h3 class="font-bold text-slate-400 text-[10px] uppercase tracking-wider mb-2 leading-none border-b border-slate-100 pb-3">Receipt Printer Simulator</h3>
+                
+                <!-- Receipt panel inner body standard printer model -->
+                <div id="receipt-printer-box" class="text-center py-12 text-slate-400 font-semibold border-b border-slate-100 pb-4">
+                  <p class="text-xs">Pilih salah satu transaksi cetak resi di kiri untuk menampilkan preview struk dan opsi Print Receipt.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- view: adminDashboard -->
+          <div id="view-adminDashboard" class="view-content hidden p-8 animate-fadeIn">
+            <div class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div>
+                <h1 class="text-2xl font-black text-slate-900 tracking-tight">Admin Dashboard & Analytics</h1>
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Sistem Kontrol Eksekutif Piturooms</p>
+              </div>
+              <div class="bg-indigo-50 border border-indigo-150 text-indigo-700 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse"></span>
+                Executive Mode Active
+              </div>
+            </div>
+
+            <!-- Grid Executive dashboard widgets layout -->
+            <div class="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
+              
+              <!-- Left side metrics dashboards bar columns -->
+              <div class="xl:col-span-8 space-y-8">
+                
+                <!-- Bar Chart custom card widget -->
+                <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 relative space-y-6">
+                  <div class="flex justify-between items-start">
+                    <div>
+                      <span class="text-[9px] font-black uppercase text-slate-400 tracking-widest">Revenue Ledger</span>
+                      <h3 class="text-2xl font-black text-slate-900 mt-1">IDR 7.852.000</h3>
+                      <div class="flex items-center gap-1 text-emerald-600 text-xs font-bold mt-1.5">
+                        <i data-lucide="trending-up" class="w-3.5 h-3.5"></i>
+                        <span>+2.1% dibanding Pekan Lalu</span>
+                      </div>
+                    </div>
+                    
+                    <div class="text-right flex flex-col items-end">
+                      <button onclick="alert('Laporan rinci diekspor dalam format spreadsheet!')" class="px-3.5 py-1.5 bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100 rounded-lg text-xs font-black transition-all cursor-pointer block select-none mb-1">
+                        View Report
+                      </button>
+                      <p class="text-[9px] text-slate-450 font-bold uppercase tracking-wider mt-1.5 block">Penjualan Terakhir: Des 1-12, 2026</p>
+                    </div>
+                  </div>
+
+                  <!-- Bar Column Charts customized using HTML structure -->
+                  <div class="relative h-64 border-b border-dashed border-slate-100 flex items-baseline justify-between pt-10 select-none overflow-visible">
+                    <!-- reference lines -->
+                    <div class="absolute inset-x-0 h-[1px] bg-slate-100 border-b border-dashed" style="top: 25%"></div>
+                    <div class="absolute inset-x-0 h-[1px] bg-slate-100 border-b border-dashed" style="top: 50%"></div>
+                    <div class="absolute inset-x-0 h-[1px] bg-slate-100 border-b border-dashed" style="top: 75%"></div>
+
+                    <!-- Bars (Day 1 - 12 comparative series vectors) layout -->
+                    <div class="flex-1 flex flex-col items-center group relative h-full justify-end">
+                      <div class="flex gap-1.5 items-end h-[160px] pb-1 z-10">
+                        <div class="w-3 rounded-full bg-indigo-500 hover:bg-indigo-600 transition-all cursor-pointer" style="height: 45%" title="Day 1: 45%"></div>
+                        <div class="w-3 rounded-full bg-slate-200" style="height: 60%"></div>
+                      </div>
+                      <span class="text-[9px] text-slate-400 font-bold mt-2">01</span>
+                    </div>
+
+                    <div class="flex-1 flex flex-col items-center group relative h-full justify-end">
+                      <div class="flex gap-1.5 items-end h-[160px] pb-1 z-10">
+                        <div class="w-3 rounded-full bg-indigo-500 hover:bg-indigo-600 transition-all cursor-pointer" style="height: 75%" title="Day 2: 75%"></div>
+                        <div class="w-3 rounded-full bg-slate-200" style="height: 50%"></div>
+                      </div>
+                      <span class="text-[9px] text-slate-400 font-bold mt-2">02</span>
+                    </div>
+
+                    <div class="flex-1 flex flex-col items-center group relative h-full justify-end">
+                      <div class="flex gap-1.5 items-end h-[160px] pb-1 z-10">
+                        <div class="w-3 rounded-full bg-indigo-500 hover:bg-indigo-600 transition-all cursor-pointer" style="height: 65%" title="Day 3: 65%"></div>
+                        <div class="w-3 rounded-full bg-slate-200" style="height: 55%"></div>
+                      </div>
+                      <span class="text-[9px] text-slate-400 font-bold mt-2">03</span>
+                    </div>
+
+                    <div class="flex-1 flex flex-col items-center group relative h-full justify-end">
+                      <div class="flex gap-1.5 items-end h-[160px] pb-1 z-10">
+                        <div class="w-3 rounded-full bg-indigo-500 hover:bg-indigo-600 transition-all cursor-pointer" style="height: 50%" title="Day 4: 50%"></div>
+                        <div class="w-3 rounded-full bg-slate-200" style="height: 70%"></div>
+                      </div>
+                      <span class="text-[9px] text-slate-400 font-bold mt-2">04</span>
+                    </div>
+
+                    <div class="flex-1 flex flex-col items-center group relative h-full justify-end">
+                      <div class="flex gap-1.5 items-end h-[160px] pb-1 z-10">
+                        <div class="w-3 rounded-full bg-indigo-500 hover:bg-indigo-600 transition-all cursor-pointer" style="height: 85%" title="Day 5: 85%"></div>
+                        <div class="w-3 rounded-full bg-slate-200" style="height: 65%"></div>
+                      </div>
+                      <span class="text-[9px] text-slate-400 font-bold mt-2">05</span>
+                    </div>
+
+                    <div class="flex-1 flex flex-col items-center group relative h-full justify-end">
+                      <div class="flex gap-1.5 items-end h-[160px] pb-1 z-10">
+                        <div class="w-3 rounded-full bg-indigo-500 hover:bg-indigo-600 transition-all cursor-pointer" style="height: 95%" title="Day 6: 95%"></div>
+                        <div class="w-3 rounded-full bg-slate-200" style="height: 70%"></div>
+                      </div>
+                      <span class="text-[9px] text-slate-400 font-bold mt-2">06</span>
+                    </div>
+
+                    <div class="flex-1 flex flex-col items-center group relative h-full justify-end">
+                      <div class="flex gap-1.5 items-end h-[160px] pb-1 z-10">
+                        <div class="w-3 rounded-full bg-indigo-500 hover:bg-indigo-600 transition-all cursor-pointer" style="height: 70%" title="Day 7: 70%"></div>
+                        <div class="w-3 rounded-full bg-slate-200" style="height: 80%"></div>
+                      </div>
+                      <span class="text-[9px] text-slate-400 font-bold mt-2">07</span>
+                    </div>
+
+                    <div class="flex-1 flex flex-col items-center group relative h-full justify-end">
+                      <div class="flex gap-1.5 items-end h-[160px] pb-1 z-10">
+                        <div class="w-3 rounded-full bg-indigo-500 hover:bg-indigo-600 transition-all cursor-pointer" style="height: 60%" title="Day 8: 60%"></div>
+                        <div class="w-3 rounded-full bg-slate-200" style="height: 90%"></div>
+                      </div>
+                      <span class="text-[9px] text-slate-400 font-bold mt-2">08</span>
+                    </div>
+
+                    <div class="flex-1 flex flex-col items-center group relative h-full justify-end">
+                      <div class="flex gap-1.5 items-end h-[160px] pb-1 z-10">
+                        <div class="w-3 rounded-full bg-indigo-500 hover:bg-indigo-600 transition-all cursor-pointer" style="height: 68%" title="Day 9: 68%"></div>
+                        <div class="w-3 rounded-full bg-slate-200" style="height: 50%"></div>
+                      </div>
+                      <span class="text-[9px] text-slate-400 font-bold mt-2">09</span>
+                    </div>
+
+                    <div class="flex-1 flex flex-col items-center group relative h-full justify-end">
+                      <div class="flex gap-1.5 items-end h-[160px] pb-1 z-10">
+                        <div class="w-3 rounded-full bg-indigo-500 hover:bg-indigo-600 transition-all cursor-pointer" style="height: 40%" title="Day 10: 40%"></div>
+                        <div class="w-3 rounded-full bg-slate-200" style="height: 60%"></div>
+                      </div>
+                      <span class="text-[9px] text-slate-400 font-bold mt-2">10</span>
+                    </div>
+
+                    <div class="flex-1 flex flex-col items-center group relative h-full justify-end">
+                      <div class="flex gap-1.5 items-end h-[160px] pb-1 z-10">
+                        <div class="w-3 rounded-full bg-indigo-500 hover:bg-indigo-600 transition-all cursor-pointer" style="height: 80%" title="Day 11: 80%"></div>
+                        <div class="w-3 rounded-full bg-slate-200" style="height: 75%"></div>
+                      </div>
+                      <span class="text-[9px] text-slate-400 font-bold mt-2">11</span>
+                    </div>
+
+                    <div class="flex-1 flex flex-col items-center group relative h-full justify-end">
+                      <div class="flex gap-1.5 items-end h-[160px] pb-1 z-10">
+                        <div class="w-3 rounded-full bg-indigo-500 hover:bg-indigo-600 transition-all cursor-pointer" style="height: 88%" title="Day 12: 88%"></div>
+                        <div class="w-3 rounded-full bg-slate-200" style="height: 68%"></div>
+                      </div>
+                      <span class="text-[9px] text-slate-400 font-bold mt-2">12</span>
+                    </div>
+
+                  </div>
+
+                  <!-- Legend indicators list -->
+                  <div class="flex items-center gap-6 justify-start text-[11px] font-bold text-slate-500 border-t border-slate-100 pt-4 select-none">
+                    <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-indigo-500 inline-block"></span> Jurnal Aktif (Rata-rata 12 Hari)</span>
+                    <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-slate-200 inline-block"></span> Pekan Lalu (Rata-rata 12 Hari)</span>
+                  </div>
+                </div>
+
+                <!-- Overlapping rating and best orders double rows cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  
+                  <!-- Rating component -->
+                  <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col justify-between min-h-[300px]">
+                    <div>
+                      <h4 class="font-extrabold text-slate-800 text-sm">Hotel Rating & Review</h4>
+                      <p class="text-[10.5px] text-slate-400 leading-tight">Penilaian kualitas layanan triwulanan hotel</p>
+                    </div>
+
+                    <!-- Radiating circular tracks -->
+                    <div class="relative flex items-center justify-center h-44 select-none my-3">
+                      <!-- Outer loop Hygiene (85%) -->
+                      <div class="absolute w-36 h-36 rounded-full border-[10px] border-indigo-100/40 flex items-center justify-center">
+                        <div class="absolute inset-0 rounded-full border-[10px] border-indigo-600 border-t-transparent border-r-transparent animate-spin-slow"></div>
+                        <!-- Middle loop taste (85%) -->
+                        <div class="w-24 h-24 rounded-full border-[10px] border-amber-100/40 flex items-center justify-center">
+                          <div class="absolute w-24 h-24 rounded-full border-[10px] border-amber-500 border-l-transparent border-b-transparent"></div>
+                          <!-- Innermost loop pack (92%) -->
+                          <div class="w-14 h-14 rounded-full border-[8px] border-cyan-100/40 flex items-center justify-center">
+                            <div class="absolute w-14 h-14 rounded-full border-[8px] border-cyan-400 border-b-transparent"></div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Floating values label flags -->
+                      <div class="absolute left-6 top-8 bg-indigo-600 text-white rounded-full w-12 h-12 flex flex-col items-center justify-center text-[10px] font-black leading-none shadow hover:scale-105 transition-all">
+                        <span>85%</span>
+                        <span class="text-[6px] tracking-wider uppercase font-bold text-indigo-200 mt-0.5">Cleans</span>
+                      </div>
+                      <div class="absolute right-5 bottom-8 bg-amber-500 text-white rounded-full w-12 h-12 flex flex-col items-center justify-center text-[10px] font-black leading-none shadow hover:scale-105 transition-all">
+                        <span>85%</span>
+                        <span class="text-[6px] tracking-wider uppercase font-bold text-amber-100 mt-0.5">Taste</span>
+                      </div>
+                      <div class="absolute left-10 bottom-4 bg-[#00bcd4] text-white rounded-full w-12 h-12 flex flex-col items-center justify-center text-[10px] font-black leading-none shadow hover:scale-105 transition-all">
+                        <span>92%</span>
+                        <span class="text-[6px] tracking-wider uppercase font-bold text-cyan-100 mt-0.5">Pack</span>
+                      </div>
+                    </div>
+
+                    <div class="flex justify-around items-center text-[10.5px] border-t border-slate-100 pt-3.5 text-slate-500 font-bold">
+                      <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-indigo-600"></span> Hygiene</span>
+                      <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-500"></span> Food Taste</span>
+                      <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-cyan-400"></span> Packaging</span>
+                    </div>
+                  </div>
+
+                  <!-- Culinary items food list -->
+                  <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col justify-between min-h-[300px]">
+                    <div>
+                      <h4 class="font-extrabold text-slate-800 text-sm">Best Ordered Food</h4>
+                      <p class="text-[10.5px] text-slate-400 leading-tight">Layanan Room Service terpopuler tamu</p>
+                    </div>
+
+                    <div id="culinary-food-list" class="space-y-3.5 my-3.5 text-xs font-semibold">
+                      <!-- dynamically loads from JS state arrays -->
+                    </div>
+
+                    <div class="border-t border-slate-100 pt-3.5 flex justify-end">
+                      <button onclick="alert('Arsip penuh kuliner hotel ditampilkan!')" class="text-[10px] text-indigo-600 hover:underline font-black uppercase tracking-wider tracking-tight cursor-pointer">
+                        Selengkapnya &rarr;
+                      </button>
+                    </div>
+                  </div>
+
+                </div>
+
+              </div>
+
+              <!-- Right side charts schedule donut layout -->
+              <div class="xl:col-span-4 space-y-8">
+                
+                <!-- Donut peak time schedules -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 relative flex flex-col justify-between min-h-[352px]">
+                  <div>
+                    <h4 class="font-extrabold text-slate-800 text-sm">Order Time</h4>
+                    <p class="text-[10px] text-slate-400 mt-0.5">Rasio kesibukan pesanan (OTA & Walk-in)</p>
+                  </div>
+
+                  <!-- Pie Donut circle layout SVG -->
+                  <div class="relative flex items-center justify-center my-6">
+                    <svg class="w-40 h-40 transform -rotate-90" viewBox="0 0 100 100">
+                      <circle cx="50" cy="50" r="40" fill="transparent" stroke="#f1f3f5" stroke-width="11" />
+                      <!-- Slice Afternoon (44%) -- stroke length 251.2 * 40% = 100.48 -->
+                      <circle cx="50" cy="50" r="40" fill="transparent" stroke="#4f46e5" stroke-width="11" stroke-dasharray="251.2" stroke-dashoffset="150.72" class="cursor-pointer hover:stroke-indigo-700 transition" />
+                      <!-- Slice Evening (32%) -- stroke offset rotated -->
+                      <circle cx="50" cy="50" r="40" fill="transparent" stroke="#60a5fa" stroke-width="11" stroke-dasharray="251.2" stroke-dashoffset="170.82" transform="rotate(144, 50, 50)" class="cursor-pointer hover:stroke-sky-500 transition" />
+                      <!-- Slice Morning (28%) -->
+                      <circle cx="50" cy="50" r="40" fill="transparent" stroke="#c7d2fe" stroke-width="11" stroke-dasharray="251.2" stroke-dashoffset="180.86" transform="rotate(259.2, 50, 50)" class="cursor-pointer hover:stroke-indigo-300 transition" />
+                    </svg>
+
+                    <!-- Overlay inner bubble text details inside donut -->
+                    <div class="absolute bg-[#1a1f2c] text-white p-3.5 rounded-xl border border-slate-700 text-center w-28 scale-90 md:scale-100">
+                      <span class="text-[8px] uppercase tracking-widest text-slate-400 font-bold block mb-0.5">Afternoon</span>
+                      <span class="text-[9px] text-[#818cf8] font-bold block">1pm - 4pm</span>
+                      <span class="text-xs font-black block mt-1 leading-none">1.890 ords</span>
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-3 gap-2 text-center text-[10px] font-black border-t border-slate-100 pt-3">
+                    <div>
+                      <span class="flex items-center gap-1 justify-center"><span class="w-1.5 h-1.5 rounded-full bg-indigo-600 inline-block"></span> Aft</span>
+                      <span class="text-slate-800 text-xs font-extrabold block mt-0.5">40%</span>
+                    </div>
+                    <div>
+                      <span class="flex items-center gap-1 justify-center"><span class="w-1.5 h-1.5 rounded-full bg-sky-400 inline-block"></span> Eve</span>
+                      <span class="text-slate-800 text-xs font-extrabold block mt-0.5">32%</span>
+                    </div>
+                    <div>
+                      <span class="flex items-center gap-1 justify-center"><span class="w-1.5 h-1.5 rounded-full bg-indigo-200 inline-block"></span> Mor</span>
+                      <span class="text-slate-800 text-xs font-extrabold block mt-0.5">28%</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Line Sparkline graphs curves -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between min-h-[224px]">
+                  <div class="flex justify-between items-start mb-2">
+                    <div>
+                      <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Aktivitas Booking</span>
+                      <h4 class="text-2xl font-black text-slate-900 mt-1">2.568</h4>
+                      <div class="flex items-center gap-1 text-rose-500 text-xs font-bold leading-none mt-1">
+                        <i data-lucide="trending-down" class="w-3 h-3"></i>
+                        <span>-1.1% vs Rata-rata</span>
+                      </div>
+                    </div>
+                    <p class="text-[9px] text-indigo-600 font-black cursor-pointer hover:underline" onclick="alert('Detail tren dianalisa!')">VIEW TREN</p>
+                  </div>
+
+                  <div class="h-24 w-full relative pt-2">
+                    <svg class="w-full h-full" viewBox="0 0 100 30" preserveAspectRatio="none">
+                      <defs>
+                        <linearGradient id="curveGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stop-color="#818cf8" stop-opacity="0.3" />
+                          <stop offset="100%" stop-color="#818cf8" stop-opacity="0.0" />
+                        </linearGradient>
+                      </defs>
+                      <path d="M0,18 Q20,10 40,22 T80,10 T100,5" fill="none" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="2,2" />
+                      <path d="M0,24 Q20,12 40,25 T80,15 T100,2" fill="none" stroke="#4f46e5" stroke-width="1.8" stroke-linecap="round" />
+                      <path d="M0,24 Q20,12 40,25 T80,15 T100,2 L100,30 L0,30 Z" fill="url(#curveGradient)" />
+                      <circle cx="80" cy="15" r="2.5" fill="#4f46e5" stroke="#ffffff" stroke-width="1" />
+                    </svg>
+                    <div class="flex justify-between items-center text-[8px] font-bold text-slate-400 mt-1.5 uppercase tracking-widest leading-none">
+                      <span>01</span>
+                      <span>02</span>
+                      <span>03</span>
+                      <span>04</span>
+                      <span>05</span>
+                      <span>06</span>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+          </div>
+
+          <!-- view: adminRooms -->
+          <div id="view-adminRooms" class="view-content hidden p-8 animate-fadeIn">
+            <div class="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                <h1 class="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+                  <i data-lucide="bed-double" class="w-6 h-6 text-indigo-650 text-indigo-600"></i>
+                  <span>Kamar & Inventori</span>
+                </h1>
+                <p class="text-xs font-bold text-slate-400 mt-1 uppercase tracking-widest">Dashboard Admin Pengaturan Kamar</p>
+              </div>
+
+              <div class="flex gap-2 text-xs font-bold shrink-0">
+                <button id="filter-admrooms-all" class="px-3.5 py-1.5 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-lg cursor-pointer">Semua</button>
+                <button id="filter-admrooms-available" class="px-3.5 py-1.5 bg-white border border-slate-200 text-slate-500 rounded-lg hover:bg-slate-50 cursor-pointer text-[11px]">Tersedia</button>
+                <button id="filter-admrooms-occupied" class="px-3.5 py-1.5 bg-white border border-slate-200 text-slate-500 rounded-lg hover:bg-slate-50 cursor-pointer text-[11px]">Terisi</button>
+                <button id="filter-admrooms-outoforder" class="px-3.5 py-1.5 bg-white border border-slate-200 text-slate-500 rounded-lg hover:bg-slate-50 cursor-pointer text-[11px]">Maintanance / Rusak</button>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+              
+              <!-- Left side rooms listings grid inside admin room -->
+              <div class="lg:col-span-8 bg-white p-6 border border-slate-200 rounded-2xl shadow-sm space-y-6">
+                <!-- Administrative Room unit grid container renders from JS -->
+                <div id="admin-rooms-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                </div>
+              </div>
+
+              <!-- Right side add rooms forms panel -->
+              <div class="lg:col-span-4 bg-white p-6 border border-slate-200 rounded-3xl shadow-sm space-y-5">
+                <div class="border-b border-slate-100 pb-3">
+                  <h3 class="font-bold text-slate-900">Tambahkan Kamar Baru</h3>
+                  <p class="text-[11px] text-slate-400">Hubungkan nomor kamar unik ke dalam inventory hotel.</p>
+                </div>
+
+                <form id="add-room-form" class="space-y-4 text-xs font-semibold">
+                  <input type="hidden" id="add-room-edit-id" value="" />
+                  <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 space-y-3">
+                    <div class="flex items-start justify-between gap-3">
+                      <div>
+                        <h3 id="add-room-form-heading" class="font-black text-slate-900">Buat Kamar Baru</h3>
+                        <p id="add-room-form-description" class="text-[10px] text-slate-400 mt-1">Bulk, custom prefix, dan fasilitas kamar bisa diatur dari sini.</p>
+                      </div>
+                      <span class="px-2 py-1 rounded-full bg-indigo-100  text-[10px] font-black uppercase tracking-[0.1em] text-indigo-700">Admin Only</span>
+                    </div>
+
+                    <div>
+                      <label class="block text-[9px] uppercase font-black tracking-wider text-slate-400 mb-1.5">Tipe Kamar</label>
+                      <input id="add-room-type" type="text" class="w-full px-4 py-2 border border-slate-200 rounded-xl font-semibold text-slate-800" value="JI-Careless Whisper" placeholder="Contoh: Deluxe Suite / Studio Premium" />
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                      <div>
+                        <label class="block text-[9px] uppercase font-black tracking-wider text-slate-400 mb-1">Lantai Kamar</label>
+                        <input id="add-room-floor-count" type="number" min="1" value="1" class="w-full px-4 py-2 border border-slate-200 rounded-xl font-mono text-slate-800" />
+                      </div>
+                      <div>
+                        <label class="block text-[9px] uppercase font-black tracking-wider text-slate-400 mb-1">Kamar per Lantai</label>
+                        <input id="add-room-per-floor" type="number" min="1" value="1" class="w-full px-4 py-2 border border-slate-200 rounded-xl font-mono text-slate-800" />
+                      </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                      <div>
+                        <label class="block text-[9px] uppercase font-black tracking-wider text-slate-400 mb-1">Prefix Unit</label>
+                        <input id="add-room-prefix" type="text" value="D" class="w-full px-4 py-2 border border-slate-200 rounded-xl font-semibold text-slate-800" placeholder="D / S / P" />
+                      </div>
+                      <div>
+                        <label class="block text-[9px] uppercase font-black tracking-wider text-slate-400 mb-1">Nomor Awal</label>
+                        <input id="add-room-number" type="number" min="1" value="101" class="w-full px-4 py-2 border border-slate-200 rounded-xl font-mono text-slate-800" placeholder="101" />
+                      </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                      <div>
+                        <label class="block text-[9px] uppercase font-black tracking-wider text-slate-400 mb-1">Langkah Nomor</label>
+                        <input id="add-room-number-step" type="number" min="1" value="1" class="w-full px-4 py-2 border border-slate-200 rounded-xl font-mono text-slate-800" />
+                      </div>
+                      <div>
+                        <label class="block text-[9px] uppercase font-black tracking-wider text-slate-400 mb-1">Status Awal</label>
+                        <select id="add-room-status" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl">
+                          <option value="Available">Available (Tersedia langsung)</option>
+                          <option value="OutofOrder">Out Of Order (Kerusakan / Maintanance)</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label class="block text-[9px] uppercase font-black tracking-wider text-slate-400 mb-1.5">Fasilitas Kamar</label>
+                      <div id="container-fasilitas-dinamis" class="grid grid-cols-2 gap-2 mt-2">
+                        <p class="col-span-full text-[10px] text-slate-400 font-semibold">Memuat fasilitas dari database...</p>
+                      </div>
+                      <div id="fasilitas-admin-controls" class="hidden mt-2 items-center gap-2">
+                        <input id="input-fasilitas-baru" type="text" class="flex-1 px-3 py-2 border border-slate-200 rounded-xl text-[11px] font-semibold" placeholder="Tambah fasilitas baru (contoh: Smart TV)" />
+                        <button id="btn-tambah-fasilitas" type="button" class="px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-black leading-none cursor-pointer">+ Tambah</button>
+                      </div>
+                      <div id="fasilitas-admin-delete-controls" class="hidden mt-2 items-center gap-2">
+                        <select id="select-fasilitas-hapus" class="flex-1 px-3 py-2 border border-slate-200 rounded-xl text-[11px] font-semibold bg-white">
+                          <option value="">Pilih fasilitas yang ingin dihapus</option>
+                        </select>
+                        <button id="btn-hapus-fasilitas" type="button" class="px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-black leading-none cursor-pointer">Hapus</button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label class="block text-[9px] uppercase font-black tracking-wider text-slate-400 mb-1">Tarif Sewa per Malam (IDR) *</label>
+                      <input id="add-room-price" type="text" inputmode="numeric" required class="w-full px-4 py-2 border border-slate-200 rounded-xl font-mono text-slate-800" value="Rp 850.000" placeholder="Rp 850.000" />
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-3 pt-1">
+                      <div>
+                        <label class="block text-[9px] uppercase font-black tracking-wider text-slate-400 mb-1">Denda Over Checkout (IDR)</label>
+                        <input id="add-room-late-fee" type="text" inputmode="numeric" class="w-full px-4 py-2 border border-slate-200 rounded-xl font-mono text-slate-800" value="Rp 0" placeholder="Rp 0" />
+                      </div>
+                      <div>
+                        <label class="block text-[9px] uppercase font-black tracking-wider text-slate-400 mb-1">Denda Penggunaan Mini Bar (IDR)</label>
+                        <input id="add-room-minibar-fee" type="text" inputmode="numeric" class="w-full px-4 py-2 border border-slate-200 rounded-xl font-mono text-slate-800" value="Rp 0" placeholder="Rp 0" />
+                      </div>
+                      <div>
+                        <label class="block text-[9px] uppercase font-black tracking-wider text-slate-400 mb-1">Denda Kerusakan / Hilang Properti (IDR)</label>
+                        <input id="add-room-damage-fee" type="text" inputmode="numeric" class="w-full px-4 py-2 border border-slate-200 rounded-xl font-mono text-slate-800" value="Rp 0" placeholder="Rp 0" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="flex flex-col sm:flex-row gap-3">
+                    <button id="add-room-submit-btn" type="submit" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl transition shadow active:scale-98 select-none cursor-pointer text-center leading-none">
+                      <span id="add-room-submit-label">Daftarkan Unit Kamar</span>
+                    </button>
+                    <button id="cancel-room-edit" type="button" class="hidden w-full sm:w-auto bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2.5 rounded-xl transition shadow active:scale-98 select-none cursor-pointer text-center leading-none">
+                      Batal
+                    </button>
+                  </div>
+                </form>
+
+              </div>
+
+            </div>
+          </div>
+
+          <!-- view: adminUsers -->
+          <div id="view-adminUsers" class="view-content hidden p-8 animate-fadeIn">
+            <div class="mb-8 border-b border-transparent pb-1">
+              <h1 class="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+                <i data-lucide="users" class="w-6 h-6 text-indigo-650 text-indigo-600"></i>
+                <span>User Accounts</span>
+              </h1>
+              <p class="text-xs font-bold text-slate-400 mt-1 uppercase tracking-widest">Kredensial log-in keamanan admin & staf</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+              
+              <!-- Left side users list table -->
+              <div class="lg:col-span-8 bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden flex flex-col justify-between">
+                <div>
+                  <div class="p-6 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                    <h3 class="font-extrabold text-slate-800 text-sm">Daftar Akun Karyawan</h3>
+                    <span class="text-xs bg-indigo-50 border border-indigo-100 text-indigo-700 px-3 py-1 rounded-lg font-black"><span id="admin-user-count">0</span> Akun Aktif</span>
+                  </div>
+
+                  <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                      <thead>
+                        <tr class="bg-slate-100 text-[10px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-150">
+                          <th class="px-6 py-3.5">Nama Lengkap</th>
+                          <th class="px-6 py-3.5">Username</th>
+                          <th class="px-6 py-3.5">Hak Akses Role</th>
+                          <th class="px-6 py-3.5 text-right">Tindakan</th>
+                        </tr>
+                      </thead>
+                      <tbody id="admin-users-table-body" class="text-xs divide-y divide-slate-100 text-slate-700 font-semibold">
+                        <!-- recursive loads -->
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div class="p-4 bg-slate-50 border-t border-slate-100 flex items-start gap-2.5 text-slate-500 font-medium">
+                  <i data-lucide="info" class="w-4 h-4 text-indigo-550 shrink-0 mt-0.5"></i>
+                  <p class="text-[11px]">Akun berhak akses <strong>Admin Eksekutif</strong> dapat memblokir/mengubah database sewa kamar, user accounts, dan laporan rincian finansial.</p>
+                </div>
+              </div>
+
+              <!-- Right side create / edit side form -->
+              <div class="lg:col-span-4 bg-white p-6 border border-slate-200 rounded-3xl shadow-sm space-y-5">
+                <div class="border-b border-slate-110 border-slate-100 pb-3">
+                  <h3 id="admin-user-form-title" class="font-black text-slate-900 text-base">Registrasi Pengguna Baru</h3>
+                  <p id="admin-user-form-sub" class="text-[11px] text-slate-400">Buat kredensial login unik HOS.</p>
+                </div>
+
+                <form id="admin-user-form" class="space-y-4 text-xs font-semibold">
+                  <input type="hidden" id="admin-user-edit-id" value="" />
+                  
+                  <div>
+                    <label class="block text-[9px] uppercase font-black tracking-wider text-slate-400 mb-1">Nama Lengkap Pemilik *</label>
+                    <input id="admin-user-fullname" type="text" required class="w-full px-4 py-2 border border-slate-205 rounded-xl font-bold" placeholder="Zia Aldrian" />
+                  </div>
+
+                  <div>
+                    <label class="block text-[9px] uppercase font-black tracking-wider text-slate-400 mb-1">Username Login *</label>
+                    <input id="admin-user-username" type="text" required class="w-full px-4 py-2 border border-slate-205 rounded-xl font-mono" placeholder="zia_recess" />
+                  </div>
+
+                  <div>
+                    <label class="block text-[9px] uppercase font-black tracking-wider text-slate-400 mb-1">Sandi Sandi Keamanan (Password) *</label>
+                    <input id="admin-user-password" type="password" required class="w-full px-4 py-2 border border-slate-205 rounded-xl font-mono" placeholder="Sandi Rahasia" />
+                  </div>
+
+                  <div>
+                    <label class="block text-[9px] uppercase font-black tracking-wider text-slate-400 mb-1.5">Hak Akses Sistem</label>
+                    <div class="grid grid-cols-2 gap-2 text-center select-none font-bold">
+                      <label class="border-2 border-indigo-650 rounded-xl p-2 px-1 cursor-pointer leading-tight text-[10px] hover:bg-slate-50 flex flex-col justify-center">
+                        <input type="radio" value="Receptionist" name="admin-user-role" checked class="hidden" />
+                        <span>RESEPTIONSIT</span>
+                      </label>
+                      <label class="border border-slate-201 border-slate-200 rounded-xl p-2 px-1 cursor-pointer leading-tight text-[10px] hover:bg-slate-50 flex flex-col justify-center">
+                        <input type="radio" value="Admin" name="admin-user-role" class="hidden" />
+                        <span>ADMIN EXECUTIVE</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div class="pt-2 flex gap-2">
+                    <button id="admin-user-btn-cancel" type="button" class="hidden flex-1 py-2.5 border border-slate-250 text-slate-500 rounded-xl hover:bg-slate-50 font-bold select-none cursor-pointer transition leading-none text-center">
+                      Batal
+                    </button>
+                    <button type="submit" class="flex-2 w-full bg-indigo-650 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl shadow cursor-pointer text-center leading-none select-none">
+                      Simpan User Account
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- view: adminGuests -->
+          <div id="view-adminGuests" class="view-content hidden p-8 animate-fadeIn">
+            <div class="mb-8">
+              <h1 class="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+                <i data-lucide="contact" class="w-6 h-6 text-indigo-650 text-indigo-600"></i>
+                <span>Riwayat Transaksi & Keuangan</span>
+              </h1>
+              <p class="text-xs font-bold text-slate-400 mt-1 uppercase tracking-widest">Panel arsip transaksi aktif untuk peran Admin Eksekutif</p>
+            </div>
+
+            <!-- Total counting counters KPI -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 select-none">
+              <div class="bg-white p-5 border border-slate-202 border-slate-200 rounded-2xl shadow-sm flex flex-col justify-between">
+                <div>
+                  <span class="text-[9px] font-black uppercase text-slate-400 tracking-widest">Total Omset Pendapatan (Rp)</span>
+                  <h3 class="text-2xl font-black text-slate-900 mt-1" id="kpi-finance-revenue">Rp 0</h3>
+                </div>
+                <p class="text-[9px] font-bold text-indigo-650 text-indigo-600 mt-3 uppercase tracking-wider">Akumulasi transaksi aktif</p>
+              </div>
+              <div class="bg-white p-5 border border-slate-202 border-slate-200 rounded-2xl shadow-sm flex flex-col justify-between">
+                <div>
+                  <span class="text-[9px] font-black uppercase text-slate-400 tracking-widest">Total Transaksi Aktif (trx)</span>
+                  <h3 class="text-2xl font-black text-slate-900 mt-1" id="kpi-finance-active-trx">0 trx</h3>
+                </div>
+                <p class="text-[9px] font-bold text-amber-600 mt-3 uppercase tracking-wider">Belum diarsipkan tutup buku</p>
+              </div>
+              <div class="bg-white p-5 border border-slate-202 border-slate-200 rounded-2xl shadow-sm flex flex-col justify-between">
+                <div>
+                  <span class="text-[9px] font-black uppercase text-slate-400 tracking-widest">Metode Terpopuler</span>
+                  <h3 class="text-2xl font-black text-slate-900 mt-1" id="kpi-finance-method">-</h3>
+                </div>
+                <p class="text-[9px] font-bold text-emerald-600 mt-3 uppercase tracking-wider">Berdasarkan jumlah transaksi</p>
+              </div>
+            </div>
+
+            <div class="mb-8 flex justify-start w-full">
+              <div class="w-full max-w-[600px] rounded-2xl border border-slate-700 bg-slate-800 text-slate-100 p-5 shadow-sm space-y-3">
+                <div>
+                  <h3 class="text-sm font-black tracking-tight">⚙️ Pengaturan Kebijakan Pembatalan &amp; Refund</h3>
+                  <p class="text-[11px] text-slate-300 mt-1">Atur persentase refund pembatalan untuk dipakai dinamis oleh resepsionis.</p>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-2.5 sm:items-center">
+                  <input id="input-refund-percentage" type="number" min="0" max="100" class="w-full sm:w-56 px-3 py-2 rounded-xl border border-slate-600 bg-slate-900 text-white text-xs font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/50" placeholder="0 - 100" />
+                  <button id="btn-simpan-kebijakan-refund" type="button" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black tracking-wide uppercase cursor-pointer">Simpan Kebijakan</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Database listings table grids -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+              
+              <div class="p-6 bg-slate-50 flex flex-wrap justify-between items-center border-b border-slate-100 gap-4">
+                <div class="flex gap-2 text-xs font-black select-none">
+                  <button id="filter-guests-all" class="px-3.5 py-1.5 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-700 cursor-pointer">Semua</button>
+                  <button id="filter-guests-inhouse" class="px-3.5 py-1.5 rounded-lg text-slate-500 hover:bg-slate-100 cursor-pointer text-[11px]">Check-In</button>
+                  <button id="filter-guests-pending" class="px-3.5 py-1.5 rounded-lg text-slate-500 hover:bg-slate-100 cursor-pointer text-[11px]">Check-Out</button>
+                  <button id="filter-guests-out" class="px-3.5 py-1.5 rounded-lg text-slate-500 hover:bg-slate-100 cursor-pointer text-[11px]">Lainnya</button>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                  <button id="btn-export-xlsx" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black tracking-wide uppercase shadow-sm transition-all cursor-pointer">
+                    <i data-lucide="download" class="w-4 h-4"></i>
+                    <span>Unduh Laporan (.xlsx)</span>
+                  </button>
+                  <button id="btn-tutup-buku" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-black tracking-wide uppercase shadow-sm transition-all cursor-pointer">
+                    <i data-lucide="archive-x" class="w-4 h-4"></i>
+                    <span>Tutup Buku & Reset</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                  <thead>
+                    <tr class="bg-slate-100 text-[10px] font-black uppercase text-slate-400 tracking-wider border-b border-slate-200">
+                      <th class="px-6 py-4">Kode TRX</th>
+                      <th class="px-6 py-4">Waktu/Tanggal</th>
+                      <th class="px-6 py-4">Nama Tamu</th>
+                      <th class="px-6 py-4">Kamar</th>
+                      <th class="px-6 py-4">Aktivitas</th>
+                      <th class="px-6 py-4 text-right">Nominal</th>
+                      <th class="px-6 py-4">Metode Pembayaran</th>
+                    </tr>
+                  </thead>
+                  <tbody id="admin-guest-table-body" class="text-xs divide-y divide-slate-100 text-slate-750 font-semibold">
+                    <!-- recursive logs -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+        </main>
+      </div>
+
+    </div>
+
+    <!-- === 3. MODALS AND POPUPS WINDOWS === -->
+    
+    <!-- MODAL: ADD RESERVATION (RECEPTIONIST BOOKING) -->
+    <div id="modal-add-reservation" class="hidden fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 select-none">
+      <div class="bg-white rounded-3xl p-6.5 max-w-lg w-full shadow-2xl border border-slate-200 relative space-y-4 animate-fadeIn p-6">
+        
+        <div class="flex justify-between items-center border-b border-slate-150 pb-3">
+          <h3 class="text-base font-black text-slate-900">Buat Booking / Reservasi Baru</h3>
+          <button id="modal-add-res-close-x" class="w-7 h-7 rounded-full bg-slate-105 bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-900 font-extrabold text-xs cursor-pointer">✕</button>
+        </div>
+
+        <form id="modal-add-res-form" class="space-y-4 text-xs font-semibold">
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-[9px] text-slate-400 uppercase font-black tracking-wider mb-1">Nama Lengkap Tamu *</label>
+              <input id="modal-add-res-name" type="text" required class="w-full px-4 py-2 border border-slate-202 rounded-xl" placeholder="Ahmad Hamzah" />
+            </div>
+            <div>
+              <label class="block text-[9px] text-slate-400 uppercase font-black tracking-wider mb-1">KTP / NID / Paspor *</label>
+              <input id="modal-add-res-identity" type="text" required class="w-full px-4 py-2 border border-slate-202 rounded-xl" placeholder="KTP No.3204xxxx" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-[9px] text-slate-400 uppercase font-black tracking-wider mb-1">No. Kontak *</label>
+              <input id="modal-add-res-phone" type="text" required class="w-full px-4 py-2 border border-slate-202 rounded-xl" placeholder="08xxxxxxxx" />
+            </div>
+            <div>
+              <label class="block text-[9px] text-slate-400 uppercase font-black tracking-wider mb-1">Email</label>
+              <input id="modal-add-res-email" type="email" class="w-full px-4 py-2 border border-slate-202 rounded-xl" placeholder="ahmad@gmail.com" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-3">
+            <div>
+              <label class="block text-[9px] text-slate-400 uppercase font-black tracking-wider mb-1">Kamar & Tipe</label>
+              <select id="modal-add-res-room-type" class="w-full px-2 py-2 border border-slate-202 bg-white rounded-xl">
+                <option value="JI-Careless Whisper">JI-Careless Whisper</option>
+                <option value="RO-Slow White">RO-Slow White </option>
+                <option value="LU-Slow White">LU-Slow White </option>
+                <option value="PAT-Red Army">PAT-Red Army </option>
+                <option value="MO-Red Army">MO-Red Army </option>
+                <option value="NEM-The timbre of blue">NEM-The timbre of blue </option>
+                <option value="TU-The timbre of blue">TU-The timbre of blue </option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[9px] text-slate-400 uppercase font-black tracking-wider mb-1">Check In *</label>
+              <input id="modal-add-res-ci" type="date" required class="w-full px-2.5 py-2 border border-slate-202 rounded-xl" />
+            </div>
+            <div>
+              <label class="block text-[9px] text-slate-400 uppercase font-black tracking-wider mb-1">Check Out *</label>
+              <input id="modal-add-res-co" type="date" required class="w-full px-2.5 py-2 border border-slate-202 rounded-xl" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-[9px] text-slate-400 uppercase font-black tracking-wider mb-1">Hari Menginap</label>
+              <input id="modal-add-res-duration" type="number" min="1" value="1" required readonly class="w-full px-4 py-2 border border-slate-202 rounded-xl bg-slate-50 text-slate-700" />
+            </div>
+            <div>
+              <label class="block text-[9px] text-slate-400 uppercase font-black tracking-wider mb-2">Pilihan Booking Kategori</label>
+              <div class="flex gap-4">
+                <label class="flex items-center gap-1.5 cursor-pointer">
+                  <input type="radio" value="Online" name="modal-add-res-cat" checked />
+                  <span>Online OTA</span>
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer">
+                  <input type="radio" value="WalkIn" name="modal-add-res-cat" />
+                  <span>Walk-In</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Total price estimate bubble -->
+          <div class="p-3.5 bg-blue-50/50 border border-blue-150 rounded-2xl flex justify-between items-center text-xs">
+            <span class="text-blue-800 font-extrabold text-xs">Total Estimasi Biaya Seluruhnya:</span>
+            <span id="modal-add-res-total-price" class="text-sm font-black text-blue-900">Rp 850.000</span>
+          </div>
+
+          <div class="flex gap-2 pt-3 border-t border-slate-100">
+            <button id="modal-add-res-btn-cancel" type="button" class="w-1/3 py-2.5 border border-slate-202 text-slate-500 rounded-xl hover:text-slate-800 transition text-center font-bold cursor-pointer leading-none select-none">
+              Batal
+            </button>
+            <button type="submit" class="w-2/3 py-2.5 bg-[#1a73e8] hover:bg-indigo-650 text-white rounded-xl transition shadow text-center font-bold cursor-pointer leading-none select-none">
+              Daftarkan & Konfirmasi Booking
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- MODAL: EDIT RESERVATION (ADMIN MODE CHANGER) -->
+    <div id="modal-edit-reservation" class="hidden fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 select-none">
+      <div class="bg-white rounded-3xl p-6.5 max-w-lg w-full shadow-2xl border border-slate-200 relative space-y-4 animate-fadeIn p-6">
+        
+        <div class="flex justify-between items-center border-b border-slate-150 pb-3">
+          <h3 class="text-base font-black text-slate-900">Ubah Rincian Booking <span id="modal-edit-id-label" class="font-mono text-indigo-600 font-bold">#PITU-XXXX</span></h3>
+          <button id="modal-edit-res-close-x" class="w-7 h-7 rounded-full bg-slate-105 bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-900 font-extrabold text-xs cursor-pointer">✕</button>
+        </div>
+
+        <form id="modal-edit-res-form" class="space-y-4 text-xs font-semibold">
+          <input type="hidden" id="modal-edit-id-field" />
+          
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-[9px] text-slate-400 uppercase font-black tracking-wider mb-1">Nama Lengkap Tamu *</label>
+              <input id="modal-edit-res-name" type="text" required class="w-full px-4 py-2 border border-slate-202 rounded-xl" />
+            </div>
+            <div>
+              <label class="block text-[9px] text-slate-400 uppercase font-black tracking-wider mb-1">KTP / NID / Paspor *</label>
+              <input id="modal-edit-res-identity" type="text" required class="w-full px-4 py-2 border border-slate-202 rounded-xl" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-[9px] text-slate-400 uppercase font-black tracking-wider mb-1">No. Kontak *</label>
+              <input id="modal-edit-res-phone" type="text" required class="w-full px-4 py-2 border border-slate-202 rounded-xl" />
+            </div>
+            <div>
+              <label class="block text-[9px] text-slate-400 uppercase font-black tracking-wider mb-1">Email</label>
+              <input id="modal-edit-res-email" type="email" class="w-full px-4 py-2 border border-slate-202 rounded-xl" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-3">
+            <div>
+              <label class="block text-[9px] text-slate-400 uppercase font-black tracking-wider mb-1">Kamar & Tipe</label>
+              <select id="modal-edit-res-room-type" class="w-full px-3 py-2 border border-slate-202 bg-white rounded-xl">
+                <option value="JI-Careless Whisper">JI-Careless Whisper (850k)</option>
+                <option value="RO-Slow White">RO-Slow White (850k)</option>
+                <option value="LU-Slow White">LU-Slow White (850k)</option>
+                <option value="PAT-Red Army">PAT-Red Army (850k)</option>
+                <option value="MO-Red Army">MO-Red Army (850k)</option>
+                <option value="NEM-The timbre of blue">NEM-The timbre of blue (850k)</option>
+                <option value="TU-The timbre of blue">TU-The timbre of blue (850k)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[9px] text-slate-400 uppercase font-black tracking-wider mb-1">Check In *</label>
+              <input id="modal-edit-res-ci" type="date" required class="w-full px-2.5 py-2 border border-slate-202 rounded-xl" />
+            </div>
+            <div>
+              <label class="block text-[9px] text-slate-400 uppercase font-black tracking-wider mb-1">Check Out *</label>
+              <input id="modal-edit-res-co" type="date" required class="w-full px-2.5 py-2 border border-slate-202 rounded-xl" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-3">
+            <div>
+              <label class="block text-[9px] text-slate-400 uppercase font-black tracking-wider mb-1">Durasi Menginap</label>
+              <input id="modal-edit-res-duration" type="number" min="1" required readonly class="w-full px-4 py-2 border border-slate-202 rounded-xl bg-slate-50 text-slate-700" />
+            </div>
+            <div>
+              <label class="block text-[9px] text-slate-400 uppercase font-black tracking-wider mb-1">No Kamar Terpilih</label>
+              <input id="modal-edit-res-room-number" type="text" class="w-full px-4 py-2 border border-slate-202 text-indigo-700 font-mono font-bold rounded-xl" placeholder="Cth: 101" />
+            </div>
+            <div>
+              <label class="block text-[9px] text-slate-400 uppercase font-black tracking-wider mb-1">Ubah Status</label>
+              <select id="modal-edit-res-status" class="w-full px-3 py-2 border border-slate-202 bg-white rounded-xl">
+                <option value="Confirmed">Confirmed</option>
+                <option value="CheckedIn">Checked In</option>
+                <option value="CheckedOut">Checked Out</option>
+                <option value="Cancelled">Cancelled</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Total price estimate bubble -->
+          <div class="p-3.5 bg-indigo-50/50 border border-indigo-150 rounded-2xl flex justify-between items-center text-xs">
+            <span class="text-indigo-800 font-extrabold text-xs">Total Update Harga Booking:</span>
+            <span id="modal-edit-res-total-price" class="text-sm font-black text-indigo-900">Rp 0</span>
+          </div>
+
+          <div class="flex gap-2 pt-3 border-t border-slate-100">
+            <button id="modal-edit-res-btn-cancel" type="button" class="w-1/3 py-2.5 border border-slate-202 text-slate-505 text-slate-500 rounded-xl hover:text-slate-800 transition text-center font-bold cursor-pointer leading-none select-none">
+              Batal
+            </button>
+            <button type="submit" class="w-2/3 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition shadow text-center font-bold cursor-pointer leading-none select-none">
+              Simpan Perubahan
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- MODAL: SECURE RESET KEUANGAN -->
+    <div id="modal-reset-finance" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 select-none">
+      <div class="w-full max-w-xl rounded-3xl border border-slate-700/80 bg-slate-900 text-slate-100 shadow-2xl overflow-hidden animate-fadeIn">
+        <div class="flex items-start justify-between gap-3 px-6 py-5 border-b border-slate-800">
+          <div>
+            <h3 class="text-base font-black tracking-tight text-white">Konfirmasi Reset / Tutup Buku Data Keuangan</h3>
+            <p class="text-[11px] text-slate-400 mt-1">Lapisan verifikasi keamanan wajib sebelum proses eksekusi.</p>
+          </div>
+          <button id="btn-close-reset-modal" type="button" class="w-8 h-8 rounded-full border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-black cursor-pointer">✕</button>
+        </div>
+
+        <div class="px-6 py-5 space-y-4">
+          <div class="rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4">
+            <p class="text-xs font-black uppercase tracking-wider text-rose-300">Peringatan Kritis</p>
+            <p class="text-xs text-rose-100 mt-1.5 leading-relaxed">Tindakan ini permanen. Data transaksi aktif akan diarsipkan dan status kamar Occupied akan direset. Pastikan backup telah disiapkan sebelum melanjutkan.</p>
+          </div>
+
+          <div class="rounded-2xl border border-slate-700 bg-slate-950/50 p-4 space-y-2">
+            <p class="text-[10px] uppercase tracking-widest font-black text-slate-400">Teks Tantangan Wajib</p>
+            <p class="text-sm font-black text-amber-300">RESET DATA PITUROOMS</p>
+            <input id="input-challenge" type="text" class="w-full px-4 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-slate-100 placeholder-slate-500 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-400" placeholder="Ketik teks tantangan di atas persis sama" autocomplete="off" />
+          </div>
+
+          <div>
+            <label for="input-admin-password" class="block text-[10px] uppercase tracking-widest font-black text-slate-400 mb-1.5">Password Admin Aktif</label>
+            <input id="input-admin-password" type="password" class="w-full px-4 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-slate-100 placeholder-slate-500 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400" placeholder="Masukkan password admin untuk verifikasi dinamis" autocomplete="current-password" />
+          </div>
+        </div>
+
+        <div class="px-6 py-4 border-t border-slate-800 bg-slate-950/60 flex flex-col sm:flex-row gap-2">
+          <button id="btn-cancel-reset" type="button" class="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-black uppercase tracking-wide cursor-pointer">Batal</button>
+          <button id="btn-submit-reset" type="button" disabled class="w-full sm:flex-1 px-4 py-2.5 rounded-xl bg-rose-600 text-white text-xs font-black uppercase tracking-wide shadow-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-rose-700 cursor-pointer">Unduh Backup &amp; Reset</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MVC Scripts -->
+    <script src="js/model/app-state.js"></script>
+    <script src="js/view/app-view.js"></script>
+    <script src="js/controller/app-controller.js"></script>
+    <script type="text/javascript"src="https://app.sandbox.midtrans.com/snap/snap.js"data-client-key="Mid-client-AdpLxpX7ZknoCOO-">
+</script>
+  </body>
+</html>

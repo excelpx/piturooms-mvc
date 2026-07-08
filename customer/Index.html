@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PituRooms</title>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>=
+<script src="../shared/firebase-config.js"></script>
+
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="toast" class="toast hidden"></div>
+
+  <header class="site-header">
+    <nav class="nav-wrap">
+      <div class="brand">
+        <div class="brand-logo">
+          <img src="/image/Logo Piturooms.png" alt="Logo Piturooms" class="w-5 h-5" />
+        </div>
+        <div>
+          <h1>Piturooms</h1>
+          <p>Piturooms Hotels</p>
+        </div>
+      </div>
+      <a href="#booking-section" class="nav-cta">Reservasi Sekarang</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero-section">
+      <div class="hero-content">
+        <span class="eyebrow">Booking Online Hotel</span>
+        <h2>Pesan kamar lebih cepat, invoice langsung tersedia.</h2>
+        <p>Pilih kamar, isi data tamu, konfirmasi pembayaran, lalu simpan kode booking untuk proses check-in.</p>
+        <div class="hero-actions">
+          <a href="#room-section" class="btn btn-primary">Lihat Kamar</a>
+          <a href="#invoice-check-section" class="btn btn-secondary">Cek Invoice</a>
+        </div>
+      </div>
+      <div class="hero-card">
+        <img src="https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=900&h=1000&fit=crop" alt="Kamar hotel" />
+        <div class="floating-price">
+          <span>Mulai dari</span>
+          <strong>Rp 600.000</strong>
+          <small>/ malam</small>
+        </div>
+      </div>
+    </section>
+
+    <section id="room-section" class="section-wrap">
+      <div class="section-heading">
+        <span class="eyebrow">Pilihan Kamar Kami</span>
+        <h2>Kartu kamar tersedia</h2>
+        <p>Pilih kamar favoritmu dan lanjutkan ke formulir pemesanan.</p>
+      </div>
+      <div id="room-list" class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3"></div>
+    </section>
+    </section>
+    <section id="invoice-check-section" class="section-wrap small-section">
+      <div class="invoice-search-card">
+        <div>
+          <span class="eyebrow">Invoice</span>
+          <h2>Cek invoice dari kode booking</h2>
+          <p>Masukkan kode booking yang sudah dibuat, contoh: PITU-ABC123.</p>
+        </div>
+        <div class="invoice-search-box">
+          <input id="invoice-code-input" type="text" placeholder="Masukkan kode booking" />
+          <button id="search-invoice-btn" class="btn btn-primary">Cari</button>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script src="js/model/booking-model.js"></script>
+  <script src="js/view/booking-view.js"></script>
+  <script src="js/controller/booking-controller.js"></script>
+  <script type="text/javascript"src="https://app.sandbox.midtrans.com/snap/snap.js"data-client-key="Mid-client-AdpLxpX7ZknoCOO-">
+</script>
+</body>
+</html>
