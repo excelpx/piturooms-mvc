@@ -1,6 +1,6 @@
 // CONTROLLER: inisialisasi aplikasi, event binding, submit booking, Firebase, dan pencarian invoice
 window.addEventListener("DOMContentLoaded", initApp, { once: true });
-
+let isMidtransOpen = false;
 let mergedRoomCatalog = [];
 
 async function initApp() {
@@ -816,14 +816,22 @@ if(
 
 }
 
+if(isMidtransOpen){
+ return;
+}
 
-    window.snap.pay(
+isMidtransOpen = true;
+
+
+window.snap.pay(
       snapToken,
       {
 
 
 onSuccess:
 async function(result){
+
+isMidtransOpen = false;
 
  console.log(
   "MIDTRANS SUCCESS:",
@@ -915,6 +923,8 @@ async function(result){
   onPending:
   function(result){
 
+  isMidtransOpen = false;
+
   console.log(
   "MIDTRANS PENDING:",
   result
@@ -930,6 +940,7 @@ async function(result){
 
   },
     onClose:function(){
+    isMidtransOpen = false;
     console.log(
     "CUSTOMER CLOSE MIDTRANS"
     );
@@ -1376,8 +1387,55 @@ updateSuccessStatus(
 "ok"
 );
 
-
 hidePaymentAction();
 
-
 };
+
+function showPaymentAction(){
+
+
+const action =
+document.getElementById(
+"payment-action"
+);
+
+
+if(action){
+
+action.classList.remove(
+"hidden"
+);
+
+
+action.style.display =
+"flex";
+
+}
+
+
+}
+
+
+function hidePaymentAction(){
+
+
+const action =
+document.getElementById(
+"payment-action"
+);
+
+
+if(action){
+
+action.classList.add(
+"hidden"
+);
+
+
+action.style.display =
+"none";
+
+}
+
+
+}
