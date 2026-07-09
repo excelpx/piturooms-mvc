@@ -878,6 +878,8 @@ async function(result){
   "ok"
   );
 
+  hidePaymentAction();
+
   await sendInvoiceEmail(
   bookingData
   );
@@ -913,45 +915,30 @@ async function(result){
   onPending:
   function(result){
 
-
   console.log(
-    "MIDTRANS PENDING:",
-    result
+  "MIDTRANS PENDING:",
+  result
   );
-
 
   updateSuccessStatus(
-    "Menunggu pembayaran Midtrans",
-    "warn"
+  "Menunggu pembayaran. Silakan selesaikan pembayaran.",
+  "warn"
   );
+
+  showPaymentAction();
 
 
   },
     onClose:function(){
-
     console.log(
     "CUSTOMER CLOSE MIDTRANS"
     );
-
     updateSuccessStatus(
     "Pembayaran belum selesai. Silakan pilih tindakan.",
     "warn"
     );
+    showPaymentAction();
 
-    document
-    .getElementById(
-    "payment-action"
-    )
-    .innerHTML = `
-
-    <button onclick="retryMidtransPayment()">
-    Bayar Sekarang
-    </button>
-
-    <button onclick="changePaymentToCash()">
-    Bayar Saat Check-in (Cash)
-    </button>
-    `;
     }
    }
  );
@@ -992,6 +979,8 @@ return;
     "Pembayaran berhasil & Booking tersimpan",
     "ok"
     );
+
+    hidePaymentAction();
 
     await sendInvoiceEmail(
     bookingData
@@ -1194,37 +1183,46 @@ async function findBookingInFirebase(code) {
     window.retryMidtransPayment =
     function(){
 
+    const booking =
+    window.lastBookingData;
+
+
     if(
-    !window.lastSnapToken
+    !window.lastSnapToken ||
+    !booking
     ){
 
     alert(
-      "Data pembayaran tidak ditemukan"
+    "Data pembayaran tidak ditemukan"
     );
 
     return;
 
     }
-    console.log(
-    "ULANG BAYAR MIDTRANS"
-    );
+
 
     window.snap.pay(
-    window.lastSnapToken
-    );
+    window.lastSnapToken,
+    {
 
-  };
 
-    window.changePaymentToCash =
-    async function(){
-    const booking =
-    window.lastBookingData;
-    if(!booking){
-    alert(
-    "Data booking tidak ditemukan"
-    );
-    return;
-    }
+    onSuccess:
+    async function(result){
+
+
+    booking.status =
+    "Confirmed";
+
+
+    booking.paymentStatus =
+    "Lunas";
+
+
+    booking.amountPaid =
+    booking.total ||
+    booking.totalCharge ||
+    booking.grandTotal;
+
 
     await firebaseDb
     .ref(
@@ -1233,37 +1231,153 @@ async function findBookingInFirebase(code) {
     )
     .update({
 
-    paymentMethod:
-    "Cash",
-    paymentStatus:
-    "Bayar di Tempat",
+
     status:
     "Confirmed",
+
+
+    paymentStatus:
+    "Lunas",
+
+
+    paymentMethod:
+    "Cashless",
+
+
+    amountPaid:
+    booking.amountPaid,
+
+
+    midtransOrderId:
+    result.order_id,
+
+
+    midtransTransactionId:
+    result.transaction_id,
+
+
+    midtransPaymentType:
+    result.payment_type,
+
+
+    paidAt:
+    new Date()
+    .toISOString(),
+
     updatedAt:
     new Date()
     .toISOString()
     });
 
-    booking.paymentMethod =
-    "Cash";
-    booking.paymentStatus =
-    "Bayar di Tempat";
-    booking.status =
-    "Confirmed";
+    updateSuccessStatus(
+    "Pembayaran berhasil",
+    "ok"
+    );
+    hidePaymentAction();
 
-    // KIRIM EMAIL INVOICE
     await sendInvoiceEmail(
     booking
     );
 
-
-    // DOWNLOAD OTOMATIS
     downloadInvoice(
     booking
     );
+    },
+
+    onPending:
+    function(){
+    updateSuccessStatus(
+    "Menunggu pembayaran",
+    "warn"
+    );
+    showPaymentAction();
+    },
+
+    onClose:
+    function(){
 
     updateSuccessStatus(
-    "Metode pembayaran diganti Cash",
-    "ok"
+    "Pembayaran belum selesai",
+    "warn"
     );
-  };
+    showPaymentAction();
+
+    }
+    }
+  );
+};
+
+window.changePaymentToCash =
+async function(){
+
+
+const booking =
+window.lastBookingData;
+
+
+if(!booking){
+
+alert(
+"Data booking tidak ditemukan"
+);
+
+return;
+
+}
+
+
+await firebaseDb
+.ref(
+"bookings/" +
+booking.id
+)
+.update({
+
+paymentMethod:
+"Cash",
+
+paymentStatus:
+"Bayar di Tempat",
+
+status:
+"Confirmed",
+
+updatedAt:
+new Date()
+.toISOString()
+
+});
+
+
+booking.paymentMethod =
+"Cash";
+
+
+booking.paymentStatus =
+"Bayar di Tempat";
+
+
+booking.status =
+"Confirmed";
+
+
+await sendInvoiceEmail(
+booking
+);
+
+
+downloadInvoice(
+booking
+);
+
+
+updateSuccessStatus(
+"Metode pembayaran diganti Cash",
+"ok"
+);
+
+
+hidePaymentAction();
+
+
+};

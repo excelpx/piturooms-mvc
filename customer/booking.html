@@ -157,9 +157,31 @@
 	Berhasil Booking
 	</div>
 	<div
-	id="payment-action"
-	class="modal-actions vertical">
-	</div>
+id="payment-action"
+class="modal-actions vertical hidden">
+
+
+<button
+type="button"
+onclick="retryMidtransPayment()"
+class="payment-retry-btn">
+
+💳 Bayar Sekarang
+
+</button>
+
+
+<button
+type="button"
+onclick="changePaymentToCash()"
+class="payment-cash-btn">
+
+🏨 Bayar Saat Check-in (Cash)
+
+</button>
+
+
+</div>
 	<div class="modal-actions vertical">
     <button
         id="download-invoice-btn"
