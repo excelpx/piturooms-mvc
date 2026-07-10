@@ -1448,18 +1448,22 @@
           </div>
 
           <div class="grid grid-cols-3 gap-3">
-            <div>
-              <label class="block text-[9px] text-slate-400 uppercase font-black tracking-wider mb-1">Kamar & Tipe</label>
-              <select id="modal-add-res-room-type" class="w-full px-2 py-2 border border-slate-202 bg-white rounded-xl">
-                <option value="JI-Careless Whisper">JI-Careless Whisper</option>
-                <option value="RO-Slow White">RO-Slow White </option>
-                <option value="LU-Slow White">LU-Slow White </option>
-                <option value="PAT-Red Army">PAT-Red Army </option>
-                <option value="MO-Red Army">MO-Red Army </option>
-                <option value="NEM-The timbre of blue">NEM-The timbre of blue </option>
-                <option value="TU-The timbre of blue">TU-The timbre of blue </option>
-              </select>
-            </div>
+          <div>
+            <label class="block text-[9px] text-slate-400 uppercase font-black tracking-wider mb-1">
+              Kamar & Tipe
+            </label>
+
+            <select 
+              id="modal-add-res-room-type"
+              required
+              class="w-full px-2.5 py-2 border border-slate-200 rounded-xl">
+
+              <option value="">
+                Memuat kamar...
+              </option>
+
+            </select>
+          </div>
             <div>
               <label class="block text-[9px] text-slate-400 uppercase font-black tracking-wider mb-1">Check In *</label>
               <input id="modal-add-res-ci" type="date" required class="w-full px-2.5 py-2 border border-slate-202 rounded-xl" />

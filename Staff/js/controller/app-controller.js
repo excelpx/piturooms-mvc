@@ -357,8 +357,7 @@ function startRealtimeRoomsListener() {
       });
     });
 
-    rooms = dedupeRoomsByCanonicalKey(incomingRooms);
-    syncToLocalStorage();
+    rooms = incomingRooms;
 
     if (currentMenu === 'adminRooms') renderAdminRooms();
     if (currentMenu === 'dashboard') renderDashboard();
@@ -508,6 +507,29 @@ function launchSystemSession() {
   startRealtimeReservationsListener();
   startFacilitiesRealtimeListener();
   renderDynamicFacilitiesOptions();
+  [
+  "walkin-checkin-date",
+  "walkin-checkout-date",
+  "modal-add-res-ci",
+  "modal-add-res-co"
+  ]
+  .forEach(id=>{
+  const input =
+  document.getElementById(id);
+  if(input){
+  input.addEventListener(
+  "change",
+  ()=>{
+  if(
+  id.includes("modal")
+  ){
+  loadReservationRoomDropdown();
+  }else{
+  loadAvailableRoomsForWalkinDropdown();
+  }
+  });
+  }
+  });
 
   // Open default menu
   if (isAdmin) {
@@ -572,71 +594,193 @@ async function deleteRoomById(roomId) {
   }
 }
 
-async function loadAvailableRoomsForWalkinDropdown() {
-  const select = document.getElementById('walkin-room-type');
-  if (!select) return;
+function isRoomAvailableByDate(
+ roomNumber,
+ checkIn,
+ checkOut
+){
 
-  const localAvailableRooms = rooms.filter(room => String(room.status || '').toLowerCase() === 'available');
-  let availableRooms = [...localAvailableRooms];
+const start =
+new Date(checkIn);
 
-  if (typeof getRooms === 'function') {
-    try {
-      const result = await withTimeout(getRooms('Available'), 8000);
-      if (result && result.success && Array.isArray(result.rooms)) {
-        const backendAvailableRooms = result.rooms
-          .map(room => ({
-            ...room,
-            id: String(room.id || '').trim(),
-            type: normalizeRoomTypeName(room.type || room.roomType || room.name || room.number || 'Kamar'),
-            status: room.status || 'Available',
-            pricePerNight: Number(room.pricePerNight || room.price || 850000),
-            lateCheckoutPenalty: Number(room.lateCheckoutPenalty || 0),
-            miniBarPenalty: Number(room.miniBarPenalty || 0),
-            damagePenalty: Number(room.damagePenalty || 0)
-          }))
-          .filter(room => room.id && String(room.status || '').toLowerCase() === 'available');
 
-        // Gabungkan backend + lokal, agar kamar buatan admin lokal tetap tampil
-        // walaupun koleksi Firebase rooms belum terisi/sinkron.
-        const mergedById = new Map();
-        [...localAvailableRooms, ...backendAvailableRooms].forEach(room => {
-          const roomKey = getRoomCanonicalKey(room);
-          if (!roomKey) return;
-          mergedById.set(roomKey, {
-            ...room,
-            id: String(room.id || '').trim(),
-            number: String(room.number || '').trim(),
-            type: normalizeRoomTypeName(room.type)
-          });
-        });
-        availableRooms = Array.from(mergedById.values());
+const end =
+new Date(checkOut);
 
-        // Sinkronkan cache lokal agar assignment kamar tetap konsisten.
-        if (backendAvailableRooms.length) {
-          const nextRooms = [...rooms];
-          backendAvailableRooms.forEach(fbRoom => {
-            const fbKey = getRoomCanonicalKey(fbRoom);
-            const index = nextRooms.findIndex(localRoom => getRoomCanonicalKey(localRoom) === fbKey);
-            if (index >= 0) {
-              nextRooms[index] = {
-                ...nextRooms[index],
-                ...fbRoom
-              };
-            } else {
-              nextRooms.push(fbRoom);
-            }
-          });
-          rooms = dedupeRoomsByCanonicalKey(nextRooms);
-          syncToLocalStorage();
-        }
-      }
-    } catch (err) {
-      console.warn('Gagal mengambil kamar Available dari backend:', err);
-    }
+
+return !reservations.some(res=>{
+
+
+const bookedRoom =
+res.roomNumber ||
+res.room ||
+res.assignedRoom;
+
+
+if(
+String(bookedRoom) !==
+String(roomNumber)
+){
+
+return false;
+
+}
+
+
+// booking selesai tidak dihitung
+if(
+[
+"CheckedOut",
+"Cancelled",
+"Canceled"
+]
+.includes(res.status)
+){
+
+return false;
+
+}
+
+
+const bookedStart =
+new Date(
+res.checkIn ||
+res.checkInDate
+);
+
+
+const bookedEnd =
+new Date(
+res.checkOut ||
+res.checkOutDate
+);
+
+
+
+return (
+
+start < bookedEnd &&
+end > bookedStart
+
+);
+
+
+});
+
+
+}
+
+async function loadAvailableRoomsForWalkinDropdown(){
+  const select =
+  document.getElementById(
+    'walkin-room-type'
+  );
+
+  if(!select){
+    return;
   }
 
-  setCheckinAvailableRooms(availableRooms);
-  renderWalkinRoomTypeOptions(getCheckinAvailableRooms());
+  const checkIn =
+  document.getElementById(
+    "walkin-checkin-date"
+  )?.value;
+
+  const checkOut =
+  document.getElementById(
+    "walkin-checkout-date"
+  )?.value;
+
+  let databaseRooms = [];
+
+  if(typeof getRooms === 'function'){
+    try{
+      const result =
+      await withTimeout(
+        getRooms(),
+        8000
+      );
+      if(
+        result &&
+        result.success &&
+        Array.isArray(result.rooms)
+      ){
+        databaseRooms =
+        result.rooms.map(room=>({
+          ...room,
+          id:
+          String(
+            room.id || ''
+          ).trim(),
+          number:
+          String(
+            room.number || ''
+          ).trim(),
+          type:
+          normalizeRoomTypeName(
+
+            room.type ||
+            room.roomType ||
+            room.name ||
+            room.number ||
+            'Kamar'
+          ),
+          status:
+          room.status ||
+          'Available',
+          pricePerNight:
+          Number(
+            room.pricePerNight ||
+            room.price ||
+            850000
+          ),
+          lateCheckoutPenalty:
+          Number(
+            room.lateCheckoutPenalty ||
+            0
+          ),
+          miniBarPenalty:
+          Number(
+            room.miniBarPenalty ||
+            0
+          ),
+          damagePenalty:
+          Number(
+            room.damagePenalty ||
+            0
+          )
+        }));
+      }
+    }catch(err){
+      console.warn(
+        'Gagal mengambil kamar dari database:',
+        err
+      );
+    }
+  }
+  const availableRooms =
+  databaseRooms.filter(room=>{
+    if(
+      !checkIn ||
+      !checkOut
+    ){
+      return true;
+    }
+    return isRoomAvailableByDate(
+      room.number,
+      checkIn,
+      checkOut
+    );
+  });
+
+  rooms = databaseRooms;
+  setCheckinAvailableRooms(
+    availableRooms
+  );
+
+  renderWalkinRoomTypeOptions(
+    availableRooms
+  );
+
   setupCheckinUnitSelects();
   calculateWalkinTotalPrice();
 }
@@ -862,13 +1006,9 @@ async function reconcileLocalRoomsWithFirebaseOnLoad() {
     // dipakai sama sekali) DAN tidak ada kamar lokal apa pun, isi dengan data awal (INITIAL_ROOMS)
     // satu kali saja supaya hotel punya inventaris awal untuk diedit oleh admin. Ini TIDAK akan
     // pernah menimpa data asli yang sudah ada di Firebase.
-    if (!backendRooms.length && !localOnlyRooms.length) {
-      const seedRooms = INITIAL_ROOMS.map(room => ({ ...room, type: normalizeRoomTypeName(room.type) }));
-      rooms = dedupeRoomsByCanonicalKey(seedRooms);
-      const seedResults = await Promise.allSettled(rooms.map(room => upsertRoomToFirebase(room)));
-      const pushed = seedResults.filter(item => item.status === 'fulfilled' && item.value && item.value.success).length;
-      return { success: true, pulled: 0, pushed, seeded: true };
-    }
+if (!backendRooms.length) {
+rooms = [];
+}
 
     rooms = dedupeRoomsByCanonicalKey([...backendRooms, ...localOnlyRooms]);
 
@@ -3578,3 +3718,129 @@ function startOnlineBookingListener(){
   });
 }
 
+async function loadReservationRoomDropdown(){
+
+const select =
+document.getElementById(
+"modal-add-res-room-type"
+);
+
+
+if(!select){
+return;
+}
+
+
+const checkIn =
+document.getElementById(
+"modal-add-res-ci"
+)?.value;
+
+
+const checkOut =
+document.getElementById(
+"modal-add-res-co"
+)?.value;
+
+
+
+select.innerHTML="";
+
+
+const result =
+await getRooms();
+
+
+if(
+!result ||
+!result.success
+){
+return;
+}
+
+
+
+let rooms =
+result.rooms;
+
+
+
+// FILTER TANGGAL RESERVASI
+rooms =
+rooms.filter(room=>{
+
+
+if(
+!checkIn ||
+!checkOut
+){
+
+return true;
+
+}
+
+
+
+return isRoomAvailableByDate(
+
+room.number,
+
+checkIn,
+
+checkOut
+
+);
+
+
+});
+
+
+
+
+rooms.forEach(room=>{
+
+
+const option =
+document.createElement(
+"option"
+);
+
+
+option.value =
+room.id;
+
+
+option.textContent =
+`${room.number} - ${room.type}`;
+
+
+select.appendChild(option);
+
+
+});
+
+
+
+if(!rooms.length){
+
+
+const option =
+document.createElement(
+"option"
+);
+
+
+option.value="";
+
+
+option.textContent=
+"Tidak ada kamar tersedia";
+
+
+select.appendChild(option);
+
+
+}
+
+
+}

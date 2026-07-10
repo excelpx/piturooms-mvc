@@ -1,36 +1,14 @@
 const INITIAL_ROOMS = [];
 
 function normalizeRoomTypeName(roomType) {
-  const value = String(roomType || '').trim();
-  if (!value) return '';
 
-  const normalizedValue = value.replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
-  const lower = normalizedValue.toLowerCase();
-  const compact = lower.replace(/[^a-z0-9]+/g, '');
+ const value =
+ String(roomType || "")
+ .trim();
 
-  const aliases = {
-    deluxe: 'JI-Careless Whisper',
-    studio: 'RO-Slow White',
-    'ji careless whisper': 'JI-Careless Whisper',
-    'ji-careless-whisper': 'JI-Careless Whisper',
-    'ro slow white': 'RO-Slow White',
-    'ro-slow-white': 'RO-Slow White',
-    'lu slow white': 'LU-Slow White',
-    'lu-slow-white': 'LU-Slow White',
-    'pat red army': 'PAT-Red Army',
-    'pat-red-army': 'PAT-Red Army',
-    'mo red army': 'MO-Red Army',
-    'mo-red-army': 'MO-Red Army',
-    'nem the timbre of blue': 'NEM-The timbre of blue',
-    'nem-the-timbre-of-blue': 'NEM-The timbre of blue',
-    'tu the timbre of blue': 'TU-The timbre of blue',
-    'tu-the-timbre-of-blue': 'TU-The timbre of blue',
-  };
 
-  if (aliases[lower]) return aliases[lower];
-  if (aliases[compact]) return aliases[compact];
+ return value;
 
-  return normalizedValue;
 }
 
 function buildRoomTypeKey(roomType) {
@@ -54,8 +32,19 @@ function getRoomTypePrice(roomType) {
 }
 
 function getAvailableRoomTypeOptions() {
-  const types = [...new Set(rooms.map(room => normalizeRoomTypeName(room.type)).filter(Boolean))];
-  return types.length ? types : ['JI-Careless Whisper', 'RO-Slow White'];
+
+  return [
+    ...new Set(
+      rooms
+      .map(room =>
+        normalizeRoomTypeName(
+          room.type
+        )
+      )
+      .filter(Boolean)
+    )
+  ];
+
 }
 
 function getAutoAssignedRoomForType(roomType) {
@@ -83,7 +72,7 @@ const DEFAULT_RECEIPT_DESIGN_SETTINGS = {
   hotelName: 'PituRooms',
   hotelAddress: 'Jl. Sukowati No.33, Kalicacing, Kecamatan Sidomukti, Kota Salatiga, Jawa Tengah',
   hotelPhone: '+62 878-8252-5777',
-  logoUrl: 'image/Logo Piturooms.png'
+  logoUrl: '/image/Logo Piturooms.png'
 };
 
 

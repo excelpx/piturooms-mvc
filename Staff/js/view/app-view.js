@@ -228,47 +228,148 @@ const availableCount =
 }
 
 // === VIEW B: CHECK-IN DESK ===
-function renderWalkinRoomTypeOptions(availableRooms) {
-  const select = document.getElementById('walkin-room-type');
-  if (!select) return;
+function renderWalkinRoomTypeOptions(availableRooms){
 
-  const list = Array.isArray(availableRooms) ? availableRooms : [];
-  select.innerHTML = '';
+const select =
+document.getElementById(
+"walkin-room-type"
+);
 
-  if (!list.length) {
-    const opt = document.createElement('option');
-    opt.value = '';
-    opt.textContent = 'Tidak ada kamar Available';
-    select.appendChild(opt);
-    return;
-  }
 
-  list.forEach((room, index) => {
-    const opt = document.createElement('option');
-    const roomTypeLabel = normalizeRoomTypeName(room.type || room.roomType || room.number || room.id);
-    const roomRateLabel = formatRoomRateToK(room.pricePerNight || room.price || getRoomTypePrice(roomTypeLabel));
+if(!select){
+return;
+}
 
-    opt.value = room.id;
-    opt.textContent = `${roomTypeLabel} (${roomRateLabel})`;
 
-    if (index === 0) {
-      opt.selected = true;
-    }
+const list =
+Array.isArray(availableRooms)
+?
+availableRooms
+:
+[];
 
-    select.appendChild(opt);
-  });
+
+select.innerHTML = "";
+
+
+if(!list.length){
+
+
+const opt =
+document.createElement(
+"option"
+);
+
+
+opt.value = "";
+
+
+opt.textContent =
+"Tidak ada kamar tersedia";
+
+
+select.appendChild(opt);
+
+
+return;
+
+
+}
+
+
+
+list.forEach((room,index)=>{
+
+
+const opt =
+document.createElement(
+"option"
+);
+
+
+
+const nomor =
+room.number ||
+room.id ||
+"-";
+
+
+const tipe =
+normalizeRoomTypeName(
+
+room.type ||
+room.roomType ||
+"Kamar"
+
+);
+
+
+
+opt.value =
+room.id;
+
+
+
+opt.textContent =
+`${nomor} - ${tipe}`;
+
+
+
+if(index === 0){
+
+opt.selected = true;
+
+}
+
+
+
+select.appendChild(opt);
+
+
+
+});
+
+
 }
 
 function setupCheckinUnitSelects() {
-  const walkinType = getSelectedWalkinRoomType();
-  const availableFiltered = rooms.filter(r => normalizeRoomTypeName(r.type) === normalizeRoomTypeName(walkinType) && r.status === 'Available');
-  const roomCountEl = document.getElementById('walkin-room-count');
 
-  if (roomCountEl) {
-    roomCountEl.textContent = `${availableFiltered.length} kamar tersedia`;
-  }
+const walkinType =
+getSelectedWalkinRoomType();
 
-  renderWalkinRoomButtons();
+
+const databaseRooms =
+getCheckinAvailableRooms();
+
+
+const availableFiltered =
+databaseRooms.filter(room =>
+
+normalizeRoomTypeName(room.type)
+===
+normalizeRoomTypeName(walkinType)
+
+);
+
+
+
+const roomCountEl =
+document.getElementById(
+"walkin-room-count"
+);
+
+
+
+if(roomCountEl){
+
+roomCountEl.textContent =
+`${availableFiltered.length} kamar tersedia`;
+
+}
+
+
+renderWalkinRoomButtons();
+
 }
 
 function renderWalkinRoomButtons() {
@@ -277,7 +378,15 @@ function renderWalkinRoomButtons() {
   if (!buttonsContainer || !roomCountEl) return;
 
   const walkinType = getSelectedWalkinRoomType();
-  const availableRooms = rooms.filter(r => normalizeRoomTypeName(r.type) === normalizeRoomTypeName(walkinType) && r.status === 'Available');
+  const availableRooms =
+getCheckinAvailableRooms()
+.filter(r =>
+
+normalizeRoomTypeName(r.type)
+===
+normalizeRoomTypeName(walkinType)
+
+);
   buttonsContainer.innerHTML = '';
   roomCountEl.textContent = `${availableRooms.length} kamar tersedia`;
 
@@ -1029,7 +1138,7 @@ function getReceiptLogoUrl(design) {
   }
 
   try {
-    return new URL('image/Logo Piturooms.png', window.location.href).href;
+    return new URL('/image/Logo Piturooms.png', window.location.href).href;
   } catch (error) {
     return 'image/Logo Piturooms.png';
   }
@@ -1443,19 +1552,26 @@ function renderAdminGuests() {
 
 // Open add Form
 function openAddReservationModal() {
-  const m = document.getElementById('modal-add-reservation');
-  if (m) {
-    m.classList.remove('hidden');
-    // Set minimal values default to current system date
-    const todayStr = new Date().toISOString().substring(0, 10);
-    document.getElementById('modal-add-res-ci').value = todayStr;
-    
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    document.getElementById('modal-add-res-co').value = tomorrow.toISOString().substring(0, 10);
-    
-    calculateModalTotalPrice();
-  }
+
+loadReservationRoomDropdown();
+
+
+const m =
+document.getElementById(
+'modal-add-reservation'
+);
+
+
+if(m){
+
+m.classList.remove(
+'hidden'
+);
+
+
+}
+
+
 }
 
 function calculateModalTotalPrice() {
