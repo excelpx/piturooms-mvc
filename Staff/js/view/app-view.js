@@ -833,7 +833,7 @@ function buildReceiptCardMarkup(model) {
     </div>
 
     <div class="border-t border-b border-dashed border-slate-350 border-slate-300 py-3.5 flex justify-between text-xs my-2 font-black text-slate-900 leading-none bg-slate-50/50 px-2 rounded">
-      <span>TOTAL SETTLMENT:</span>
+      <span>TOTAL :</span>
       <span>${escapeReceiptHtml(model.totalAmount)}</span>
     </div>
 
@@ -860,19 +860,23 @@ function getReceiptPrintStyles() {
       print-color-adjust: exact;
     }
 
-    body {
-      font-family: 'Courier New', monospace;
-      font-size: 11px;
-      line-height: 1.35;
-      color: #334155;
+    body{
+        width:58mm;
+        margin:0 auto;
+        padding:0;
+        font-family:Arial,Helvetica,sans-serif;
+        font-size:9px;
+        line-height:1.2;
+        font-weight:600;
+        color:#000;
     }
 
     .invoice-container {
-      width: 280px;
-      max-width: 280px;
-      margin: 0 auto;
-      padding: 8px 6px;
-      box-sizing: border-box;
+        width: 54mm;
+        max-width: 54mm;
+        margin: 0 auto;
+        padding: 2mm;
+        box-sizing: border-box;
     }
 
     .invoice-card {
@@ -889,17 +893,17 @@ function getReceiptPrintStyles() {
 
     .invoice-title {
       margin: 0;
-      font-size: 14px;
-      font-weight: 800;
+      font-size:15px;
+      font-weight:900;
       text-transform: uppercase;
-      color: #0f172a;
+      color: #000;
       letter-spacing: 0.2px;
     }
 
     .invoice-sub {
       margin: 0;
-      font-size: 9px;
-      color: #94a3b8;
+      font-size: 8px;
+      color: #000000;
       line-height: 1.25;
       font-weight: 700;
     }
@@ -917,7 +921,7 @@ function getReceiptPrintStyles() {
       align-items: flex-start;
       gap: 8px;
       font-size: 10px;
-      color: #94a3b8;
+      color: #000000;
       font-weight: 700;
     }
 
@@ -927,16 +931,16 @@ function getReceiptPrintStyles() {
       gap: 7px;
     }
 
-    .invoice-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 8px;
+    .invoice-row{
+        display:grid;
+        grid-template-columns:70px 1fr;
+        gap:4px;
+        align-items:start;
     }
 
     .invoice-label {
-      color: #94a3b8;
-      font-size: 11px;
+      color: #000000;
+      font-size: 10px;
       font-weight: 700;
       text-transform: uppercase;
       flex: 0 0 auto;
@@ -944,10 +948,10 @@ function getReceiptPrintStyles() {
 
     .invoice-value {
       color: #1f2937;
-      font-size: 12px;
+      font-size: 10px;
       font-weight: 700;
       text-align: right;
-      max-width: 165px;
+      max-width:120px;
       word-break: break-word;
       overflow-wrap: break-word;
       white-space: normal;
@@ -959,41 +963,62 @@ function getReceiptPrintStyles() {
       text-transform: uppercase;
     }
 
-    .invoice-total {
-      margin-top: 10px;
-      border-top: 1px dashed #d2d9e8;
-      border-bottom: 1px dashed #d2d9e8;
-      background: #f1f5f9;
-      padding: 10px 4px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
+    .invoice-total{
+        margin-top:5px;
+        border-top:1px dashed #000;
+        border-bottom:1px dashed #000;
+        padding:20px 0;
+
+        display:grid;
+        grid-template-columns:1fr auto;
+        align-items:center;
+        column-gap:20px;
     }
 
-    .invoice-total-label,
-    .invoice-total-value {
-      color: #111827;
-      font-size: 13px;
-      font-weight: 800;
-      letter-spacing: 0.3px;
+    .invoice-total-label{
+        font-size:12px;
+        font-weight:900;
+    }
+
+    .invoice-total-value{
+        font-size:12px;
+        font-weight:900;
+        white-space:nowrap;
+        text-align:right;
     }
 
     .invoice-footer {
       margin-top: 12px;
       text-align: center;
-      color: #94a3b8;
-      font-size: 10px;
+      color: #000;
+      font-size: 8px;
       font-weight: 700;
     }
 
     .invoice-footer-note {
       margin-top: 4px;
-      font-size: 9px;
+      font-size: 8px;
       text-transform: uppercase;
       letter-spacing: 0.8px;
+    }
+
+    *{
+    color:#000 !important;
+    text-shadow:none !important;
+    box-shadow:none !important;
+    filter:none !important;
+    }
+    
+    img{
+        image-rendering: crisp-edges;
+    }
+
+    .invoice-card{
+        width:100%;
+        padding:4px;
+        border:none;
+        border-radius:0;
+        background:#fff;
     }
 
     @media print {
@@ -1010,12 +1035,12 @@ function getReceiptPrintStyles() {
         display: none !important;
       }
 
-      .invoice-container {
-        width: 280px !important;
-        max-width: 280px !important;
-        margin: 0 auto !important;
-        padding: 4px 2px !important;
-      }
+    .invoice-container{
+        width:54mm !important;
+        max-width:54mm !important;
+        margin:0 auto !important;
+        padding:2mm !important;
+    }
 
       .invoice-card {
         border-radius: 0 !important;
@@ -1066,7 +1091,7 @@ function buildReceiptPrintMarkup(model) {
         </div>
 
         <div class="invoice-total">
-          <span class="invoice-total-label">TOTAL SETTLMENT:</span>
+          <span class="invoice-total-label">TOTAL :</span>
           <span class="invoice-total-value">${escapeReceiptHtml(model.totalAmount)}</span>
         </div>
 
