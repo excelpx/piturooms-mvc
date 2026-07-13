@@ -790,7 +790,7 @@ function buildReceiptViewModel(trx, design) {
     transactionType: trx.type || '-',
     paymentMethod: trx.paymentMethod || '-',
     totalAmount: formatIDR(trx.amount),
-    cashierName: trx.resepsionis || 'Sistem HOS'
+    cashierName: trx.resepsionis || 'Kasir'
   };
 }
 
@@ -871,14 +871,6 @@ function getReceiptPrintStyles() {
         color:#000;
     }
 
-    .invoice-container {
-        width: 54mm;
-        max-width: 54mm;
-        margin: 0 auto;
-        padding: 2mm;
-        box-sizing: border-box;
-    }
-
     .invoice-card {
       background: #fcfcfc;
       border: 1px solid #d7def2;
@@ -912,18 +904,11 @@ function getReceiptPrintStyles() {
       font-size: 8.5px;
     }
 
-    .invoice-meta {
-      margin-top: 8px;
-      padding: 6px 0;
-      border-bottom: 1px dashed #d2d9e8;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 8px;
-      font-size: 10px;
-      color: #000000;
-      font-weight: 700;
-    }
+.invoice-meta{
+display:grid;
+grid-template-columns:1fr;
+gap:2px;
+}
 
     .invoice-section {
       margin-top: 10px;
@@ -933,7 +918,7 @@ function getReceiptPrintStyles() {
 
     .invoice-row{
         display:grid;
-        grid-template-columns:70px 1fr;
+        grid-template-columns:58px 1fr;
         gap:4px;
         align-items:start;
     }
@@ -951,9 +936,9 @@ function getReceiptPrintStyles() {
       font-size: 10px;
       font-weight: 700;
       text-align: right;
-      max-width:120px;
+      max-width:85px;
       word-break: break-word;
-      overflow-wrap: break-word;
+      overflow-wrap:anywhere;
       white-space: normal;
       flex: 1 1 auto;
     }
@@ -964,24 +949,21 @@ function getReceiptPrintStyles() {
     }
 
     .invoice-total{
-        margin-top:5px;
-        border-top:1px dashed #000;
-        border-bottom:1px dashed #000;
-        padding:20px 0;
-
-        display:grid;
-        grid-template-columns:1fr auto;
-        align-items:center;
-        column-gap:20px;
+    margin-top:6px;
+    padding:6px 0;
+    display:grid;
+    grid-template-columns:80px auto;
+    column-gap:6px;
+    align-items:center;
     }
 
     .invoice-total-label{
-        font-size:12px;
+        font-size:11px;
         font-weight:900;
     }
 
     .invoice-total-value{
-        font-size:12px;
+        font-size:11px;
         font-weight:900;
         white-space:nowrap;
         text-align:right;
@@ -1036,10 +1018,10 @@ function getReceiptPrintStyles() {
       }
 
     .invoice-container{
-        width:54mm !important;
-        max-width:54mm !important;
+        width:48mm !important;
+        max-width:48mm !important;
         margin:0 auto !important;
-        padding:2mm !important;
+        padding:1.5mm !important;
     }
 
       .invoice-card {
@@ -1052,7 +1034,7 @@ function getReceiptPrintStyles() {
 
 function buildReceiptPrintMarkup(model) {
   const logoBlock = model.logoUrl
-    ? `<img src="${escapeReceiptHtml(model.logoUrl)}" alt="Logo Hotel" style="width:64px;height:64px;object-fit:contain;display:block;margin:0 auto 6px;" />`
+    ? `<img src="${escapeReceiptHtml(model.logoUrl)}" alt="Logo Hotel" style="width:48px;height:48px;object-fit:contain;display:block;margin:0 auto 6px;" />`
     : '';
 
   return `
@@ -1090,10 +1072,17 @@ function buildReceiptPrintMarkup(model) {
           </div>
         </div>
 
-        <div class="invoice-total">
-          <span class="invoice-total-label">TOTAL :</span>
-          <span class="invoice-total-value">${escapeReceiptHtml(model.totalAmount)}</span>
-        </div>
+      <div class="invoice-total">
+
+          <div class="invoice-total-label">
+              TOTAL :
+          </div>
+
+          <div class="invoice-total-value">
+              ${escapeReceiptHtml(model.totalAmount)}
+          </div>
+
+      </div>
 
         <div class="invoice-footer">
           <div>Kasir/Penerima: ${escapeReceiptHtml(model.cashierName)}</div>
